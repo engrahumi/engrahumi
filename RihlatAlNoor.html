@@ -17,6 +17,7 @@
   --display:"Baloo Bhaijaan 2", "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
   --r:28px;
 }
+*,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
 body{margin:0;background:linear-gradient(180deg,var(--sky) 0%,var(--sky2) 100%);background-color:var(--sky);color:var(--ink);
@@ -100,6 +101,19 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
 .dk.got{border-color:var(--sun)}
 .hint{text-align:center;color:var(--muted);font-size:18px;margin:0 0 10px}
 
+/* stories */
+.cat.wide{grid-column:1/-1;flex-direction:row;justify-content:center;gap:14px}
+.scene{max-width:680px;width:100%;margin:0 auto 14px;border-radius:var(--r);min-height:clamp(150px,30vh,240px);display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:4px 12px;padding:12px;font-size:clamp(54px,15vw,96px);line-height:1.15;box-shadow:0 6px 0 var(--line);background:var(--card)}
+.scene span{display:inline-block;animation:bob 2.6s ease-in-out infinite}
+.scene.in{animation:fadeIn .5s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fadeIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+.qt.st{font-size:clamp(21px,5.4vw,30px);font-weight:700;line-height:1.55}
+.nav{display:flex;gap:12px;max-width:680px;margin:14px auto 0;width:100%}
+.nav #sprev{flex:0 0 84px;background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--line)}
+.nav #snext{flex:1}
+
 /* win overlay */
 .overlay{position:fixed;inset:0;background:rgba(23,58,94,.45);display:grid;place-items:center;z-index:20;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -153,6 +167,27 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
     </div>
   </section>
 
+  <section id="stories" hidden>
+    <div class="top" data-top></div>
+    <div class="scroll">
+      <p class="hint">اختار قصة</p>
+      <div class="cats" id="storyList"></div>
+    </div>
+  </section>
+
+  <section id="story" hidden>
+    <div class="top" data-top></div>
+    <div class="dots" id="sdots"></div>
+    <div class="scroll">
+      <div class="scene" id="scene"></div>
+      <div class="qcard"><button class="say" id="ssay" aria-label="اسمع القصة">🔊</button><p class="qt st" id="stext"></p></div>
+      <div class="nav">
+        <button class="play" id="sprev" aria-label="الصفحة اللي فاتت">→</button>
+        <button class="play" id="snext">التالي ←</button>
+      </div>
+    </div>
+  </section>
+
   <section id="baby" hidden>
     <div class="top" data-top></div>
     <div class="scroll"><div class="board" id="babyBoard"></div></div>
@@ -182,6 +217,7 @@ const KIDS = {
 };
 const STICKERS = ['🌙','⭐','🕌','🐪','🌴','📖','🕋','🐝','🌈','🍇','🐑','🌟'];
 const CATS = [
+  { id:'stories', name:'قصص الأنبياء', icon:'📖', color:'#5B6FD6', wide:1 },
   { id:'ibada',   name:'عباداتي',        icon:'🕌', color:'#2FA36B' },
   { id:'animals', name:'حيوانات القرآن', icon:'🐪', color:'#E8A400' },
   { id:'akhlaq',  name:'أخلاقي الحلوة',  icon:'💛', color:'#FF7A59' },
@@ -219,6 +255,69 @@ const Q = {
     { t:'قبل النوم شنو نسوي؟', o:[['🤲','نقرأ أذكار النوم',1],['📢','نصيح'],['🍬','ناكل حلوى']] }
   ]
 };
+// القصص تنعرض بالأشياء والحيوانات بس، وما نرسم الأنبياء أبداً
+const STORIES = [
+  { id:'nuh', title:'سفينة نوح', icon:'🚢', color:'#2B9AC9', bg:'#D8EEF8', pages:[
+    ['🏘️ 🤲', 'نبي الله نوح عليه السلام كان يكول للناس: اعبدوا الله وحده، وكونوا طيبين.'],
+    ['🪵 🔨 🚢', 'الله أمر نوح يبني سفينة كبيرة كلش.'],
+    ['🐘 🐘 🦒 🦒 🐑 🐑', 'ركبوا بالسفينة المؤمنين، ومن كل الحيوانات اثنين اثنين.'],
+    ['🌧️ 🌊 🚢', 'نزل مطر هواية هواية، وصار الماي بكل مكان.'],
+    ['⛰️ 🚢 ☀️', 'والله نجّاهم، والسفينة وقفت على جبل، ونزلوا كلهم سالمين.']
+  ], q:[
+    { t:'شنو بنى نبي الله نوح؟', o:[['🚢','سفينة',1],['🏠','بيت'],['🚗','سيارة']] },
+    { t:'الحيوانات ركبت بالسفينة كم كم؟', o:[['✌️','اثنين اثنين',1],['☝️','واحد بس'],['🔟','عشرة']] }
+  ]},
+  { id:'yunus', title:'يونس والحوت', icon:'🐋', color:'#2F8F9D', bg:'#D6F0EE', pages:[
+    ['🏘️ ➡️ 🌊', 'نبي الله يونس عليه السلام طلع من قريته لأن أهلها ما سمعوا كلامه.'],
+    ['🚢 🌊 🌬️', 'ركب بسفينة، وجت ريح قوية وصارت أمواج كبيرة.'],
+    ['🌊 🐋', 'وقع بالبحر، والله أرسل حوت كبير وبلعه.'],
+    ['🐋 🤲 ✨', 'ببطن الحوت، يونس دعا الله وكال: لا إله إلا أنت سبحانك.'],
+    ['🏖️ 🌿 ☀️', 'الله سمع دعاءه، والحوت طلّعه على الشاطئ سالم، ونبتت له شجرة يقطين.']
+  ], q:[
+    { t:'منو بلع نبي الله يونس؟', o:[['🐋','الحوت',1],['🐢','سلحفاة'],['🐙','أخطبوط']] },
+    { t:'شنو سوى يونس ببطن الحوت؟', o:[['🤲','دعا الله',1],['😴','نام'],['🎮','لعب']] }
+  ]},
+  { id:'ibrahim', title:'إبراهيم والنار', icon:'🔥', color:'#E8663D', bg:'#FDE6D8', pages:[
+    ['🗿 🗿 🗿', 'قوم نبي الله إبراهيم عليه السلام كانوا يعبدون أصنام من حجر، ما تسمع ولا تشوف.'],
+    ['❤️ ☝️', 'بس إبراهيم كان يحب الله وحده، ويكول لهم: الأصنام ما تنفع.'],
+    ['🔥 🔥 🔥', 'زعلوا عليه، وسوّوا نار كبيرة كلش ورموه بيها.'],
+    ['❄️ 🌸 ✨', 'الله كال: يا نار كوني بردًا وسلامًا على إبراهيم.'],
+    ['🌸 🕊️ 🌸', 'وطلع إبراهيم من النار سالم بفضل الله.']
+  ], q:[
+    { t:'النار شلون صارت على إبراهيم؟', o:[['❄️','باردة وسلام',1],['🔥','حارة'],['💧','ماي']] },
+    { t:'إبراهيم كان يحب منو؟', o:[['☝️','الله وحده',1],['🗿','الأصنام'],['💰','الفلوس']] }
+  ]},
+  { id:'salih', title:'ناقة صالح', icon:'🐪', color:'#C9822B', bg:'#F8EAD3', pages:[
+    ['🏜️ ⛰️', 'نبي الله صالح عليه السلام كان بقوم ثمود، ساكنين ببيوت محفورة بالجبال.'],
+    ['🪨 ✨ 🐪', 'الله طلّع لهم ناقة من الصخر، معجزة حتى يصدّقون.'],
+    ['🐪 💧', 'صالح كال لهم: هاي ناقة الله لا تأذوها، يوم تشرب هي ويوم تشربون انتم.'],
+    ['⚡ 🌪️', 'بس هم ما سمعوا الكلام وأذوا الناقة، فالله عاقبهم.'],
+    ['❤️ 🐪', 'نتعلم: نسمع كلام الله، ونرحم الحيوانات.']
+  ], q:[
+    { t:'ناقة صالح طلعت من شنو؟', o:[['🪨','الصخر',1],['🌳','شجرة'],['🌊','البحر']] },
+    { t:'شلون نتعامل ويا الحيوانات؟', o:[['❤️','نرحمها',1],['😠','نأذيها'],['🙈','ما نهتم بيها']] }
+  ]},
+  { id:'musa', title:'موسى والبحر', icon:'🌊', color:'#5B6FD6', bg:'#E1E5FA', pages:[
+    ['👑 😠', 'فرعون كان ملك ظالم، يأذي الناس.'],
+    ['🌙 ➡️ 🌊', 'نبي الله موسى عليه السلام طلع بالليل ويا المؤمنين، وفرعون وجنوده لحقوهم.'],
+    ['🌊 🌊 🌊', 'وصلوا للبحر، وراهم فرعون وكدامهم البحر!'],
+    ['🪵 🌊 ✨', 'الله أمر موسى يضرب البحر بعصاه، فانشق البحر وصار بيه طريق يابس.'],
+    ['🌊 🛤️ 🌊', 'مشوا بالطريق وعبروا كلهم سالمين، الحمد لله.']
+  ], q:[
+    { t:'موسى ضرب البحر بشنو؟', o:[['🪵','العصا',1],['⚽','طوبة'],['🎈','بالون']] },
+    { t:'شنو صار بالبحر؟', o:[['🛤️','صار بيه طريق',1],['🔥','صار نار'],['❄️','صار ثلج']] }
+  ]},
+  { id:'sulayman', title:'سليمان والنملة', icon:'🐜', color:'#2FA36B', bg:'#DDF3E5', pages:[
+    ['🐦 🐎 🐘', 'نبي الله سليمان عليه السلام، الله علّمه يفهم كلام الطيور والحيوانات.'],
+    ['🐎 🐎 🐎', 'بيوم من الأيام، سليمان وجيشه كانوا يمشون بوادي النمل.'],
+    ['🐜 📢 🐜', 'نملة صغيرة صاحت: يا نمل، ادخلوا بيوتكم حتى ما يدوسون عليكم!'],
+    ['🐜 🏠 🐜', 'النمل كله دخل بيوته بسرعة.'],
+    ['🤲 💚', 'سليمان سمعها وابتسم، وشكر الله على نعمته.']
+  ], q:[
+    { t:'منو حچت بالقصة؟', o:[['🐜','النملة',1],['🐝','النحلة'],['🐈','البزونة']] },
+    { t:'سليمان كان يفهم كلام منو؟', o:[['🐦','الطيور والحيوانات',1],['📺','التلفزيون'],['📱','التلفون']] }
+  ]}
+];
 const DHIKR = [
   ['🍽️','بسم الله'],['🤲','الحمد لله'],['✨','سبحان الله'],['🌟','الله أكبر'],
   ['☝️','لا إله إلا الله'],['💚','أستغفر الله'],['🌸','ما شاء الله'],['🎁','جزاك الله خير']
@@ -295,7 +394,9 @@ function show(id){
 function renderTop(el, id){
   el.innerHTML = '';
   const back = document.createElement('button'); back.className='back'; back.textContent='→'; back.setAttribute('aria-label','رجوع');
-  back.onclick = () => (id === 'quiz' || id === 'dhikr') ? openMenu() : goHome();
+  back.onclick = () => id === 'quiz' ? (G && G.back ? G.back() : openMenu())
+    : (id === 'dhikr' || id === 'stories') ? openMenu()
+    : id === 'story' ? openStories() : goHome();
   const who = document.createElement('div'); who.className='who';
   who.appendChild(ava(kid, 50));
   const b = document.createElement('b'); b.textContent = KIDS[kid].name; who.appendChild(b);
@@ -389,7 +490,8 @@ function openMenu(){
   CATS.forEach(cat => {
     const b = document.createElement('button'); b.className='cat'; b.style.background = cat.color;
     b.innerHTML = `<span class="ic">${cat.icon}</span><span class="nm">${cat.name}</span>`;
-    b.onclick = () => cat.id === 'dhikr' ? openDhikr() : startQuiz(cat.id);
+    if (cat.wide) b.classList.add('wide');
+    b.onclick = () => cat.id === 'dhikr' ? openDhikr() : cat.id === 'stories' ? openStories() : startQuiz(cat.id);
     box.appendChild(b);
   });
   speak('يا ' + KIDS[kid].name + '، شنو تحب تلعب؟');
@@ -397,8 +499,9 @@ function openMenu(){
 
 /* ---------- quiz ---------- */
 let G = null;
-function startQuiz(cat){
-  G = { cat, list: shuffle(Q[cat]).slice(0,5), i:0, earned:0, lock:false, newSticker:null };
+function startQuiz(cat, list, back, again){
+  G = { cat, list: list || shuffle(Q[cat]).slice(0,5), i:0, earned:0, lock:false, newSticker:null,
+        back: back || openMenu, again: again || (() => startQuiz(cat)) };
   show('quiz'); nextQ();
 }
 function nextQ(){
@@ -431,7 +534,7 @@ function answer(b, o){
 }
 function finish(){
   $('dots').innerHTML = G.list.map(() => '<i class="done"></i>').join('');
-  showWin(G.earned, G.newSticker, () => startQuiz(G.cat), openMenu);
+  showWin(G.earned, G.newSticker, G.again, G.back);
 }
 function showWin(n, sticker, again, back){
   $('winAva').innerHTML = ''; $('winAva').appendChild(ava(kid, 120));
@@ -443,6 +546,43 @@ function showWin(n, sticker, again, back){
   $('win').hidden = false; chime(); confetti(26);
   speak('أحسنت يا ' + KIDS[kid].name + ' يا بطل! فزت وجمعت ' + n + ' نجوم');
 }
+
+/* ---------- prophets' stories ---------- */
+let ST = null;
+function openStories(){
+  show('stories');
+  S.done = S.done || {};
+  const box = $('storyList'); box.innerHTML = '';
+  STORIES.forEach(s => {
+    const b = document.createElement('button'); b.className = 'cat'; b.style.background = s.color;
+    b.innerHTML = `<span class="ic">${s.icon}</span><span class="nm">${s.title}${S.done[s.id] ? ' ✅' : ''}</span>`;
+    b.onclick = () => openStory(s);
+    box.appendChild(b);
+  });
+  speak('يا ' + KIDS[kid].name + '، اختار قصة');
+}
+function openStory(s){ ST = { s, p:0 }; show('story'); renderPage(); }
+function renderPage(){
+  const { s, p } = ST, pg = s.pages[p], last = p === s.pages.length - 1;
+  $('sdots').innerHTML = s.pages.map((_, i) => `<i class="${i <= p ? 'done' : ''}"></i>`).join('');
+  const sc = $('scene'); sc.style.background = s.bg;
+  sc.innerHTML = pg[0].split(' ').map((e, i) => `<span style="animation-delay:${i * .3}s">${e}</span>`).join('');
+  sc.classList.remove('in'); void sc.offsetWidth; sc.classList.add('in');
+  $('stext').textContent = pg[1];
+  $('sprev').style.visibility = p ? 'visible' : 'hidden';
+  $('snext').textContent = last ? 'يلا نجاوب! ⭐' : 'التالي ←';
+  $('snext').style.background = last ? 'var(--leaf)' : s.color;
+  setTimeout(() => speak(pg[1]), 250);
+}
+$('ssay').onclick = () => ST && speak(ST.s.pages[ST.p][1]);
+$('sprev').onclick = () => { if (ST && ST.p > 0) { ST.p--; renderPage(); } };
+$('snext').onclick = () => {
+  if (!ST) return;
+  const s = ST.s;
+  if (ST.p < s.pages.length - 1) { ST.p++; popS(); renderPage(); return; }
+  S.done = S.done || {}; S.done[s.id] = 1; save();
+  startQuiz('story', shuffle(s.q), openStories, () => openStory(s));
+};
 
 /* ---------- dhikr ---------- */
 function openDhikr(){
