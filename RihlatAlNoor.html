@@ -114,6 +114,22 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
 .nav #sprev{flex:0 0 84px;background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--line)}
 .nav #snext{flex:1}
 
+/* reading highlight + dad's voice */
+.reading{transform:scale(1.05);box-shadow:0 0 0 5px var(--sun),0 6px 0 var(--line)!important;transition:transform .2s}
+.qt.reading{transform:none;box-shadow:none!important;background:#FFF4CF;border-radius:14px}
+.qt{cursor:pointer}
+.warn{max-width:560px;margin:14px auto 0;background:#FFF4CF;border-radius:20px;padding:12px 16px;font-size:16px;line-height:1.7;color:var(--ink)}
+.warn b{font-size:18px}
+.dad{display:block;max-width:420px;margin:14px auto 0;background:var(--ink)}
+.vlist{display:flex;flex-direction:column;gap:12px;max-width:640px;margin:0 auto;width:100%}
+.vrow{background:var(--card);border-radius:22px;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;box-shadow:0 5px 0 var(--line)}
+.vrow .vt{flex:1 1 180px;min-width:0;font-size:21px;font-weight:800;line-height:1.3}
+.vrow .vs{display:block;font-size:14px;font-weight:500;color:var(--muted)}
+.vrow .vb{display:flex;gap:8px}
+.vrow .vb button{width:52px;height:52px;border-radius:16px;background:var(--soft);font-size:24px}
+.vrow .vb button.pickb{width:auto;padding:0 14px;font-size:18px;font-weight:700;background:var(--sun)}
+.vrow .vb button[disabled]{opacity:.3}
+
 /* win overlay */
 .overlay{position:fixed;inset:0;background:rgba(23,58,94,.45);display:grid;place-items:center;z-index:20;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -142,6 +158,8 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
       </div>
       <div class="kids" id="kids"></div>
       <p class="note">هنا ماكو خسارة. كل جواب صح يجيب نجمة، وكل 5 نجوم تفتح ملصق جديد. واذا الجواب مو صح، بس نجرب مرة ثانية.</p>
+      <div class="warn" id="voiceWarn" hidden><b>🔈 تلفونك ما بيه صوت عربي</b><br>حتى تنقرا الأسئلة بالصوت: بالأندرويد روح للإعدادات ← النظام ← اللغات ← تحويل النص إلى كلام، ونزّل اللغة العربية. بالآيفون: الإعدادات ← تسهيل الوصول ← المحتوى المنطوق ← الأصوات ← العربية. واذا بقى بدون صوت، افتح الرابط بمتصفح Chrome أو Safari.</div>
+      <button class="play dad" id="dadBtn">🎙️ صوت بابا</button>
     </div>
   </section>
 
@@ -188,6 +206,14 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
     </div>
   </section>
 
+  <section id="voice" hidden>
+    <div class="top"><button class="back" id="vback" aria-label="رجوع">→</button><div class="who"><b>صوت بابا 🎙️</b></div></div>
+    <div class="scroll">
+      <p class="hint">سجّل كل عبارة بمسجّل التلفون أو واتساب، وبعدين اختار الملف هنا. صوتك يطلع بدال صوت التلفون.</p>
+      <div class="vlist" id="vlist"></div>
+    </div>
+  </section>
+
   <section id="baby" hidden>
     <div class="top" data-top></div>
     <div class="scroll"><div class="board" id="babyBoard"></div></div>
@@ -206,6 +232,7 @@ button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
     </div>
   </div>
   <input type="file" id="photoInput" accept="image/*" hidden>
+  <input type="file" id="audioInput" accept="audio/*" hidden>
 </div>
 
 <script>
@@ -346,16 +373,87 @@ const pick = a => a[Math.random()*a.length|0];
 let voices = [];
 function loadVoices(){ try { voices = speechSynthesis.getVoices(); } catch(e) {} }
 try { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; } catch(e) {}
-function speak(t){
-  if (S.mute) return;
+const hasAr = () => voices.some(v => v.lang && v.lang.toLowerCase().startsWith('ar'));
+setTimeout(() => { try { loadVoices(); $('voiceWarn').hidden = ('speechSynthesis' in window) && hasAr(); } catch(e) {} }, 2000);
+function utter(t, done){
   try {
-    speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(t);
     u.lang = 'ar-SA'; u.rate = .85; u.pitch = 1.15;
     const v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ar'));
     if (v) u.voice = v;
+    let fired = false; const fin = () => { if (!fired) { fired = true; done(); } };
+    u.onend = fin; u.onerror = fin;
+    setTimeout(fin, 1500 + t.length * 140); // احتياط اذا المتصفح ما بلّغ بنهاية الجملة
     speechSynthesis.speak(u);
-  } catch(e) {}
+  } catch(e) { setTimeout(done, 600); }
+}
+// يقرأ العبارات وحدة ورا الثانية، ويضوّي كل وحدة وهي تنقرا
+let seqId = 0;
+function speakSeq(items){
+  const my = ++seqId;
+  document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading'));
+  stopAudio();
+  try { speechSynthesis.cancel(); } catch(e) {}
+  if (S.mute) return;
+  let i = 0, prev = null;
+  const next = () => {
+    if (my !== seqId) return;
+    if (prev) prev.classList.remove('reading');
+    if (i >= items.length) return;
+    const it = items[i++]; prev = it.el || null;
+    if (prev) prev.classList.add('reading');
+    utter(it.t, next);
+  };
+  setTimeout(next, 80);
+}
+const speak = t => speakSeq([{ t }]);
+function stopAll(){ seqId++; document.querySelectorAll('.reading').forEach(e => e.classList.remove('reading')); stopAudio(); try { speechSynthesis.cancel(); } catch(e) {} }
+
+/* ---------- صوت بابا: تسجيلات تنحفظ بالتلفون ---------- */
+const SLOTS = [
+  ['praise_sanad', 'أحسنت يا سند يا بطل'],
+  ['praise_osama', 'أحسنت يا أسامة يا بطل'],
+  ['praise_any',   'أحسنت يا بطل'],
+  ['try',          'قريب! جرّب مرة ثانية'],
+  ['win',          'فزت! عاشت إيدك']
+];
+const CLIPS = {};
+const idb = (() => {
+  let dbp = null;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('rihlat-alnoor-voice', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('clips');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction('clips', mode), req = fn(t.objectStore('clips'));
+    t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error);
+  }));
+  return { get: k => tx('readonly', s => s.get(k)), set: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k)) };
+})();
+(async () => {
+  for (const [k] of SLOTS) {
+    try { const b = await idb.get(k); if (b) CLIPS[k] = URL.createObjectURL(b); } catch(e) {}
+  }
+})();
+let audio = null;
+function stopAudio(){ if (audio) { try { audio.pause(); } catch(e) {} audio = null; } }
+function playClip(slot){
+  const url = CLIPS[slot];
+  if (!url) return false;
+  if (S.mute) return true;
+  seqId++; try { speechSynthesis.cancel(); } catch(e) {}
+  stopAudio(); audio = new Audio(url);
+  audio.play().catch(() => {});
+  return true;
+}
+function praiseClip(){
+  const have = ['praise_' + kid, 'praise_any'].filter(s => CLIPS[s]);
+  return have.length ? playClip(pick(have)) : false;
+}
+function sayPraise(extra = ''){
+  const pr = praise(); toast(pr + extra);
+  if (!praiseClip()) speak(pr);
 }
 let ac = null;
 function tone(notes, type='sine', len=.16, vol=.18){
@@ -389,7 +487,7 @@ function show(id){
   document.querySelectorAll('#app > section').forEach(s => s.hidden = s.id !== id);
   const top = document.querySelector('#' + id + ' [data-top]');
   if (top) renderTop(top, id);
-  try { speechSynthesis.cancel(); } catch(e) {}
+  stopAll();
 }
 function renderTop(el, id){
   el.innerHTML = '';
@@ -402,7 +500,7 @@ function renderTop(el, id){
   const b = document.createElement('b'); b.textContent = KIDS[kid].name; who.appendChild(b);
   const p = document.createElement('span'); p.className='pill'; p.innerHTML = `⭐ <span data-count="${kid}">${S[kid].stars}</span>`;
   const m = document.createElement('button'); m.className='mute'; m.textContent = S.mute ? '🔇' : '🔊'; m.setAttribute('aria-label','الصوت');
-  m.onclick = () => { S.mute = !S.mute; save(); m.textContent = S.mute ? '🔇' : '🔊'; try{speechSynthesis.cancel();}catch(e){} };
+  m.onclick = () => { S.mute = !S.mute; save(); m.textContent = S.mute ? '🔇' : '🔊'; stopAll(); };
   el.append(back, who, p, m);
 }
 function toast(t){
@@ -494,7 +592,7 @@ function openMenu(){
     b.onclick = () => cat.id === 'dhikr' ? openDhikr() : cat.id === 'stories' ? openStories() : startQuiz(cat.id);
     box.appendChild(b);
   });
-  speak('يا ' + KIDS[kid].name + '، شنو تحب تلعب؟');
+  speakSeq([{ t:'يا ' + KIDS[kid].name + '، شنو تحب تلعب؟' }].concat([...box.children].map((b, i) => ({ t: CATS[i].name, el: b }))));
 }
 
 /* ---------- quiz ---------- */
@@ -516,20 +614,20 @@ function nextQ(){
     b.onclick = () => answer(b, o);
     box.appendChild(b);
   });
-  G.say = q.t + ' ... ' + opts.map(o => o[1]).join('، أو ');
-  setTimeout(() => speak(G.say), 250);
+  G.seq = [{ t: q.t, el: $('qt') }].concat([...box.children].map((b, i) => ({ t: opts[i][1], el: b })));
+  setTimeout(() => speakSeq(G.seq), 250);
 }
-$('say').onclick = () => G && speak(G.say);
+$('say').onclick = $('qt').onclick = () => G && speakSeq(G.seq);
 function answer(b, o){
   if (G.lock || b.classList.contains('try')) return;
   if (o[2]){
     G.lock = true; b.classList.add('right'); chime(); confetti(12);
     G.earned++; const s = addStar(kid, b); if (s) G.newSticker = s;
-    const pr = praise(); speak(pr); toast(pr);
+    sayPraise();
     setTimeout(() => { G.i++; G.i < G.list.length ? nextQ() : finish(); }, 1900);
   } else {
     b.classList.add('try'); soft();
-    speak('قريب! جرّب مرة ثانية');
+    if (!playClip('try')) speak('قريب! جرّب مرة ثانية');
   }
 }
 function finish(){
@@ -544,7 +642,7 @@ function showWin(n, sticker, again, back){
   $('again').onclick = () => { $('win').hidden = true; again(); };
   $('winBack').onclick = () => { $('win').hidden = true; back(); };
   $('win').hidden = false; chime(); confetti(26);
-  speak('أحسنت يا ' + KIDS[kid].name + ' يا بطل! فزت وجمعت ' + n + ' نجوم');
+  if (!playClip('win') && !praiseClip()) speak('أحسنت يا ' + KIDS[kid].name + ' يا بطل! فزت وجمعت ' + n + ' نجوم');
 }
 
 /* ---------- prophets' stories ---------- */
@@ -559,7 +657,7 @@ function openStories(){
     b.onclick = () => openStory(s);
     box.appendChild(b);
   });
-  speak('يا ' + KIDS[kid].name + '، اختار قصة');
+  speakSeq([{ t:'يا ' + KIDS[kid].name + '، اختار قصة' }].concat([...box.children].map((b, i) => ({ t: STORIES[i].title, el: b }))));
 }
 function openStory(s){ ST = { s, p:0 }; show('story'); renderPage(); }
 function renderPage(){
@@ -584,6 +682,42 @@ $('snext').onclick = () => {
   startQuiz('story', shuffle(s.q), openStories, () => openStory(s));
 };
 
+/* ---------- dad's voice screen ---------- */
+let audioSlot = null;
+function openVoice(){ show('voice'); renderVoice(); }
+function renderVoice(){
+  const box = $('vlist'); box.innerHTML = '';
+  SLOTS.forEach(([k, label]) => {
+    const r = document.createElement('div'); r.className = 'vrow';
+    const t = document.createElement('div'); t.className = 'vt';
+    t.innerHTML = `🎙️ ${label}<span class="vs">${CLIPS[k] ? '✅ بصوتك' : 'بصوت التلفون لهسه'}</span>`;
+    const bx = document.createElement('div'); bx.className = 'vb';
+    const pickB = document.createElement('button'); pickB.className = 'pickb';
+    pickB.textContent = CLIPS[k] ? '🔁 غيّر' : '📁 اختار تسجيل';
+    pickB.onclick = () => { audioSlot = k; $('audioInput').value = ''; $('audioInput').click(); };
+    const playB = document.createElement('button'); playB.textContent = '▶️'; playB.setAttribute('aria-label', 'اسمع');
+    playB.onclick = () => { if (!playClip(k)) speak(label); };
+    const delB = document.createElement('button'); delB.textContent = '🗑️'; delB.setAttribute('aria-label', 'امسح'); delB.disabled = !CLIPS[k];
+    delB.onclick = async () => {
+      stopAudio(); if (CLIPS[k]) URL.revokeObjectURL(CLIPS[k]); delete CLIPS[k];
+      try { await idb.del(k); } catch(e) {}
+      renderVoice();
+    };
+    bx.append(pickB, playB, delB); r.append(t, bx); box.appendChild(r);
+  });
+}
+$('dadBtn').onclick = openVoice;
+$('vback').onclick = goHome;
+$('audioInput').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; if (!f || !audioSlot) return;
+  if (CLIPS[audioSlot]) URL.revokeObjectURL(CLIPS[audioSlot]);
+  CLIPS[audioSlot] = URL.createObjectURL(f);
+  let kept = true;
+  try { await idb.set(audioSlot, f); } catch(err) { kept = false; }
+  renderVoice(); playClip(audioSlot);
+  toast(kept ? 'انحفظ صوتك ✅' : 'يشتغل هسه، بس ما انحفظ بهذا المتصفح');
+});
+
 /* ---------- dhikr ---------- */
 function openDhikr(){
   show('dhikr');
@@ -596,7 +730,7 @@ function openDhikr(){
       speak(t); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       if (!got.has(i)){
         got.add(i); b.classList.add('got'); popS(); addStar(kid, b);
-        if (got.size % 3 === 0 && got.size < DHIKR.length) setTimeout(() => { const pr = praise(); speak(pr); toast(pr); }, 1100);
+        if (got.size % 3 === 0 && got.size < DHIKR.length) setTimeout(() => sayPraise(), 1100);
         if (got.size === DHIKR.length) setTimeout(() => showWin(DHIKR.length, null, openDhikr, openMenu), 1300);
       }
     };
@@ -617,7 +751,7 @@ function openBaby(){
     b.addEventListener('pointerdown', () => {
       b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       popS(); speak(t);
-      if (++taps % 5 === 0) setTimeout(() => { const pr = praise(); speak(pr); toast(pr + ' 🏆'); chime(); confetti(18); }, 900);
+      if (++taps % 5 === 0) setTimeout(() => { sayPraise(' 🏆'); chime(); confetti(18); }, 900);
       const now = Date.now(); if (now - last > 900){ last = now; addStar(kid, b); }
       if (Math.random() < .25) confetti(6);
     });
