@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>رحلة النور</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap">
+<style>
+/* Layout: one-screen app, big touch tiles on a daytime sky; single bright look on purpose (a kids' game) */
+:root{
+  --sky:#BFE6F2; --sky2:#E8F7EF; --card:#FFFFFF; --ink:#173A5E; --muted:#557089;
+  --sun:#FFC93C; --sun-deep:#E8A400; --coral:#FF7A59; --leaf:#2FA36B; --lilac:#8C7BE8;
+  --soft:#F1F7FB; --line:#D5E6EE;
+  --display:"Baloo Bhaijaan 2", "Segoe UI", Tahoma, "Noto Sans Arabic", sans-serif;
+  --r:28px;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,var(--sky) 0%,var(--sky2) 100%);background-color:var(--sky);color:var(--ink);
+  font-family:var(--display);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column}
+section{flex:1;min-height:0;display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 16px}
+.scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-block:6px 12px}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:4px solid var(--lilac);outline-offset:3px}
+
+/* home */
+.hero{text-align:center;padding-top:8px}
+.hero h1{margin:0;font-size:clamp(34px,8vw,52px);font-weight:800;line-height:1.1;text-wrap:balance}
+.hero h1 .moon{display:inline-block;color:var(--sun-deep)}
+.hero p{margin:4px 0 0;font-size:18px;color:var(--muted);font-weight:500}
+.kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:760px;margin:18px auto 0;width:100%}
+.kid{background:var(--card);border-radius:var(--r);padding:20px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;
+  box-shadow:0 6px 0 var(--line)}
+.kid .name{font-size:34px;font-weight:800;line-height:1}
+.kid .age{font-size:15px;color:var(--muted);margin-top:-4px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:#FFF4CF;color:var(--ink);border-radius:999px;padding:4px 14px;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.stickers{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;min-height:34px;font-size:26px}
+.stickers .lock{opacity:.18;filter:grayscale(1)}
+.play{width:100%;font-size:26px;font-weight:800;color:#fff;border-radius:22px;padding:10px 0 8px;box-shadow:0 5px 0 rgba(0,0,0,.18);transition:transform .1s}
+.play:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.photo-btns{display:flex;gap:14px;font-size:15px;color:var(--muted)}
+.photo-btns button{text-decoration:underline;text-underline-offset:3px;padding:4px}
+.note{max-width:560px;margin:18px auto 0;text-align:center;color:var(--muted);font-size:16px;line-height:1.6}
+
+/* avatar */
+.ava{border-radius:50%;display:grid;place-items:center;overflow:hidden;flex:none;color:#fff;font-weight:800;border:5px solid #fff;
+  box-shadow:0 0 0 5px var(--ring,var(--sun))}
+.ava img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;padding-bottom:8px}
+.top .back{width:56px;height:56px;border-radius:50%;background:var(--card);font-size:28px;box-shadow:0 4px 0 var(--line);flex:none}
+.top .who{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.top .who b{font-size:26px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .mute{width:48px;height:48px;border-radius:50%;background:var(--card);font-size:22px;box-shadow:0 4px 0 var(--line);flex:none}
+
+/* category menu */
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:640px;margin:8px auto 0;width:100%}
+.cat{border-radius:var(--r);padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;
+  box-shadow:0 6px 0 rgba(0,0,0,.15);transition:transform .1s}
+.cat:active{transform:translateY(4px)}
+.cat .ic{font-size:clamp(52px,14vw,76px);line-height:1.1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.12))}
+.cat .nm{font-size:clamp(20px,5vw,26px);font-weight:800;text-align:center;line-height:1.2}
+
+/* quiz */
+.dots{display:flex;justify-content:center;gap:8px;padding:2px 0 10px}
+.dots i{width:16px;height:16px;border-radius:50%;background:#fff;opacity:.8}
+.dots i.done{background:var(--sun);opacity:1;box-shadow:0 0 0 3px #fff}
+.qcard{background:var(--card);border-radius:var(--r);padding:16px 18px;text-align:center;max-width:680px;margin:0 auto;width:100%;box-shadow:0 6px 0 var(--line);position:relative}
+.qcard .qt{font-size:clamp(24px,6.4vw,36px);font-weight:800;line-height:1.35;text-wrap:balance;margin:0;padding-inline:44px}
+.qcard .say{position:absolute;inset-inline-start:10px;top:10px;width:46px;height:46px;border-radius:50%;background:var(--soft);font-size:24px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:680px;margin:16px auto 0;width:100%}
+.opt{background:var(--card);border-radius:var(--r);padding:14px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  box-shadow:0 6px 0 var(--line);border:4px solid transparent;transition:transform .12s,opacity .3s}
+.opt .e{font-size:clamp(64px,17vw,92px);line-height:1.1}
+.opt .l{font-size:clamp(20px,5vw,26px);font-weight:700;line-height:1.25}
+.opt:active{transform:scale(.96)}
+.opt.right{border-color:var(--leaf);background:#E6F8EE;animation:bounce .6s}
+.opt.try{opacity:.35;animation:shake .45s}
+@keyframes bounce{0%{transform:scale(1)}40%{transform:scale(1.12)}70%{transform:scale(.97)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+
+/* baby board + dhikr */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;max-width:760px;margin:0 auto;width:100%}
+.tile{border-radius:var(--r);aspect-ratio:1;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.14);touch-action:manipulation}
+.tile .e{font-size:clamp(60px,16vw,84px);line-height:1}
+.tile .l{font-size:22px;font-weight:800}
+.tile.pop{animation:pop .5s}
+@keyframes pop{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.18) rotate(-6deg)}60%{transform:scale(.95) rotate(4deg)}100%{transform:scale(1)}}
+.dk{background:var(--card);border-radius:var(--r);padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  box-shadow:0 6px 0 var(--line);border:4px solid transparent}
+.dk .e{font-size:44px;line-height:1}
+.dk .l{font-size:clamp(22px,5.6vw,28px);font-weight:800;line-height:1.3;text-align:center}
+.dk.got{border-color:var(--sun)}
+.hint{text-align:center;color:var(--muted);font-size:18px;margin:0 0 10px}
+
+/* win overlay */
+.overlay{position:fixed;inset:0;background:rgba(23,58,94,.45);display:grid;place-items:center;z-index:20;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.win{background:var(--card);border-radius:34px;padding:26px 20px 20px;text-align:center;max-width:420px;width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;animation:bounce .6s}
+.win h2{margin:0;font-size:34px;font-weight:800;line-height:1.2;text-wrap:balance}
+.win .big{font-size:46px;letter-spacing:4px;line-height:1.2}
+.win .new{background:#FFF4CF;border-radius:20px;padding:6px 14px;font-size:20px;font-weight:700}
+.win .row{display:flex;gap:12px;width:100%}
+.win .row button{flex:1}
+
+.toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 14px);transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:10px 20px;border-radius:999px;font-size:20px;font-weight:700;z-index:30;white-space:nowrap}
+.fly{position:fixed;z-index:40;font-size:44px;pointer-events:none;line-height:1}
+.conf{position:fixed;top:-60px;z-index:35;pointer-events:none;font-size:30px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<div id="app" dir="rtl" lang="ar">
+  <section id="home">
+    <div class="scroll">
+      <div class="hero">
+        <h1>رحلة النور <span class="moon">☾</span></h1>
+        <p>لعبة سند وأسامة</p>
+      </div>
+      <div class="kids" id="kids"></div>
+      <p class="note">هنا ماكو خسارة. كل جواب صح يجيب نجمة، وكل 5 نجوم تفتح ملصق جديد. واذا الجواب مو صح، بس نجرب مرة ثانية.</p>
+    </div>
+  </section>
+
+  <section id="menu" hidden>
+    <div class="top" data-top></div>
+    <div class="scroll"><div class="cats" id="cats"></div></div>
+  </section>
+
+  <section id="quiz" hidden>
+    <div class="top" data-top></div>
+    <div class="dots" id="dots"></div>
+    <div class="scroll">
+      <div class="qcard"><button class="say" id="say" aria-label="اسمع السؤال">🔊</button><p class="qt" id="qt"></p></div>
+      <div class="opts" id="opts"></div>
+    </div>
+  </section>
+
+  <section id="dhikr" hidden>
+    <div class="top" data-top></div>
+    <div class="scroll">
+      <p class="hint">اضغط على الذكر، اسمعه وردده</p>
+      <div class="board" id="dhikrBoard"></div>
+    </div>
+  </section>
+
+  <section id="baby" hidden>
+    <div class="top" data-top></div>
+    <div class="scroll"><div class="board" id="babyBoard"></div></div>
+  </section>
+
+  <div class="overlay" id="win" hidden>
+    <div class="win">
+      <div id="winAva"></div>
+      <h2 id="winTitle"></h2>
+      <div class="big" id="winStars"></div>
+      <div class="new" id="winNew" hidden></div>
+      <div class="row">
+        <button class="play" id="again" style="background:var(--leaf)">مرة ثانية</button>
+        <button class="play" id="winBack" style="background:var(--lilac)">رجوع</button>
+      </div>
+    </div>
+  </div>
+  <input type="file" id="photoInput" accept="image/*" hidden>
+</div>
+
+<script>
+(() => {
+'use strict';
+const KIDS = {
+  sanad: { name:'سند',  age:'4 سنين', ring:'#FF7A59', initial:'س' },
+  osama: { name:'أسامة', age:'سنة',    ring:'#2FA36B', initial:'أ' }
+};
+const STICKERS = ['🌙','⭐','🕌','🐪','🌴','📖','🕋','🐝','🌈','🍇','🐑','🌟'];
+const CATS = [
+  { id:'ibada',   name:'عباداتي',        icon:'🕌', color:'#2FA36B' },
+  { id:'animals', name:'حيوانات القرآن', icon:'🐪', color:'#E8A400' },
+  { id:'akhlaq',  name:'أخلاقي الحلوة',  icon:'💛', color:'#FF7A59' },
+  { id:'dhikr',   name:'أذكاري',          icon:'🤲', color:'#8C7BE8' }
+];
+// [emoji, label, correct?]
+const Q = {
+  ibada: [
+    { t:'وين نروح نصلي؟', o:[['🕌','الجامع',1],['🏪','المحل'],['🏖️','البحر']] },
+    { t:'كم صلاة نصلي باليوم؟', o:[['5️⃣','خمسة',1],['2️⃣','ثنتين'],['🔟','عشرة']] },
+    { t:'شنو نقول قبل ما ناكل؟', o:[['🍽️','بسم الله',1],['👋','مع السلامة'],['😴','تصبح على خير']] },
+    { t:'شنو نقول من نخلص الأكل؟', o:[['🤲','الحمد لله',1],['📢','يلا نلعب'],['👋','مع السلامة']] },
+    { t:'قبل الصلاة شنو نسوي؟', o:[['💧','نتوضأ',1],['🛌','ننام'],['📺','نشوف تلفزيون']] },
+    { t:'وين الكعبة، بيت الله؟', o:[['🕋','هاي الكعبة',1],['🏰','قلعة'],['🗼','برج']] },
+    { t:'شهر الصيام اسمه؟', o:[['🌙','رمضان',1],['❄️','الشتاء'],['☀️','الصيف']] },
+    { t:'كتاب الله اسمه؟', o:[['📖','القرآن',1],['📒','دفتر'],['📰','جريدة']] }
+  ],
+  animals: [
+    { t:'وحدة من سور القرآن اسمها سورة النحل. وين النحلة؟', o:[['🐝','نحلة',1],['🦋','فراشة'],['🐞','دعسوقة']] },
+    { t:'سورة الفيل. وين الفيل؟', o:[['🐘','فيل',1],['🦒','زرافة'],['🦁','أسد']] },
+    { t:'سورة النمل. وين النملة؟', o:[['🐜','نملة',1],['🐛','دودة'],['🐌','حلزونة']] },
+    { t:'سورة البقرة. وين البقرة؟', o:[['🐄','بقرة',1],['🐑','خروف'],['🐐','معزة']] },
+    { t:'سورة العنكبوت. وين العنكبوت؟', o:[['🕷️','عنكبوت',1],['🐜','نملة'],['🐝','نحلة']] },
+    { t:'نبي الله يونس كان ببطن شنو؟', o:[['🐋','الحوت',1],['🐢','سلحفاة'],['🐙','أخطبوط']] },
+    { t:'نبي الله صالح كانت عنده ناقة. وين الناقة؟', o:[['🐪','ناقة',1],['🐎','حصان'],['🐘','فيل']] },
+    { t:'نبي الله سليمان جابله خبر طير اسمه الهدهد. وين الطير؟', o:[['🐦','طير',1],['🐟','سمكة'],['🐈','بزونة']] }
+  ],
+  akhlaq: [
+    { t:'من تشوف أحد، شنو تقول؟', o:[['👋','السلام عليكم',1],['🙈','أركض'],['😠','أزعل']] },
+    { t:'أخوك أسامة يبچي، شنو تسوي؟', o:[['🤗','أحضنه وألعب وياه',1],['🧸','آخذ لعبته'],['🙉','ما أسمعه']] },
+    { t:'ماما تعبانة، شنو نسوي؟', o:[['🤝','نساعدها',1],['📢','نصيح'],['🎮','نلعب وبس']] },
+    { t:'بأي إيد ناكل؟', o:[['🫱','اليمنى',1],['🫲','اليسرى']] },
+    { t:'من نخلص الأكل نغسل شنو؟', o:[['🙌','إيدينا',1],['🧸','الدبدوب'],['👟','الحذاء']] },
+    { t:'بابا جابلك هدية، شنو تقول؟', o:[['🎁','شكراً بابا',1],['😤','ما أريدها'],['🙊','ما أحچي']] },
+    { t:'قبل النوم شنو نسوي؟', o:[['🤲','نقرأ أذكار النوم',1],['📢','نصيح'],['🍬','ناكل حلوى']] }
+  ]
+};
+const DHIKR = [
+  ['🍽️','بسم الله'],['🤲','الحمد لله'],['✨','سبحان الله'],['🌟','الله أكبر'],
+  ['☝️','لا إله إلا الله'],['💚','أستغفر الله'],['🌸','ما شاء الله'],['🎁','جزاك الله خير']
+];
+const BABY = [
+  ['🌙','هلال','#8C7BE8'],['⭐','نجمة','#E8A400'],['🕌','جامع','#2FA36B'],['🕋','الكعبة','#173A5E'],
+  ['🐪','جمل','#C9822B'],['🐑','خروف','#5BA4D6'],['🐝','نحلة','#E8A400'],['🐘','فيل','#7C8DA6'],
+  ['🐟','سمكة','#2B9AC9'],['📖','قرآن','#2FA36B'],['🌴','نخلة','#3E8E4E'],['🤲','دعاء','#FF7A59']
+];
+const PRAISE = ['أحسنت يا NAME!','عاشت إيدك يا NAME!','شاطر يا NAME!','ما شاء الله عليك يا NAME!','برافو يا NAME!'];
+
+/* ---------- state ---------- */
+const KEY = 'rihlat-alnoor-v1';
+const PHOTO = { sanad:null, osama:null }; // الصور تنضاف من داخل اللعبة (زر: حط صورة)
+let S = { sanad:{stars:0,photo:PHOTO.sanad}, osama:{stars:0,photo:PHOTO.osama}, mute:false };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.sanad) S = Object.assign(S, s); } catch(e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+const $ = id => document.getElementById(id);
+let kid = 'sanad';
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const pick = a => a[Math.random()*a.length|0];
+
+/* ---------- sound ---------- */
+let voices = [];
+function loadVoices(){ try { voices = speechSynthesis.getVoices(); } catch(e) {} }
+try { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; } catch(e) {}
+function speak(t){
+  if (S.mute) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'ar-SA'; u.rate = .85; u.pitch = 1.15;
+    const v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ar'));
+    if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch(e) {}
+}
+let ac = null;
+function tone(notes, type='sine', len=.16, vol=.18){
+  if (S.mute) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === 'suspended') ac.resume();
+    notes.forEach((f,i) => {
+      const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + i*len*.8;
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0+.02); g.gain.exponentialRampToValueAtTime(.001, t0+len*1.6);
+      o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0+len*1.7);
+    });
+  } catch(e) {}
+}
+const chime = () => tone([523,659,784,1047],'triangle',.13);
+const soft  = () => tone([392,349],'sine',.18,.1);
+const popS  = () => tone([660+Math.random()*300],'triangle',.1,.16);
+
+/* ---------- ui helpers ---------- */
+function ava(k, size){
+  const d = document.createElement('div');
+  d.className = 'ava';
+  d.style.cssText = `width:${size}px;height:${size}px;font-size:${size*.45}px;background:${KIDS[k].ring};--ring:${KIDS[k].ring}`;
+  if (S[k].photo) { const i = new Image(); i.src = S[k].photo; i.alt = KIDS[k].name; d.appendChild(i); }
+  else d.textContent = KIDS[k].initial;
+  return d;
+}
+function stickersOf(k){ return Math.min(STICKERS.length, Math.floor(S[k].stars/5)); }
+function show(id){
+  document.querySelectorAll('#app > section').forEach(s => s.hidden = s.id !== id);
+  const top = document.querySelector('#' + id + ' [data-top]');
+  if (top) renderTop(top, id);
+  try { speechSynthesis.cancel(); } catch(e) {}
+}
+function renderTop(el, id){
+  el.innerHTML = '';
+  const back = document.createElement('button'); back.className='back'; back.textContent='→'; back.setAttribute('aria-label','رجوع');
+  back.onclick = () => (id === 'quiz' || id === 'dhikr') ? openMenu() : goHome();
+  const who = document.createElement('div'); who.className='who';
+  who.appendChild(ava(kid, 50));
+  const b = document.createElement('b'); b.textContent = KIDS[kid].name; who.appendChild(b);
+  const p = document.createElement('span'); p.className='pill'; p.innerHTML = `⭐ <span data-count="${kid}">${S[kid].stars}</span>`;
+  const m = document.createElement('button'); m.className='mute'; m.textContent = S.mute ? '🔇' : '🔊'; m.setAttribute('aria-label','الصوت');
+  m.onclick = () => { S.mute = !S.mute; save(); m.textContent = S.mute ? '🔇' : '🔊'; try{speechSynthesis.cancel();}catch(e){} };
+  el.append(back, who, p, m);
+}
+function toast(t){
+  const d = document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2200);
+}
+function confetti(n=16){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const set = ['⭐','🌟','✨','🌙','💛'];
+  for (let i=0;i<n;i++){
+    const s = document.createElement('span'); s.className='conf'; s.textContent = pick(set);
+    s.style.left = (Math.random()*100) + 'vw';
+    document.body.appendChild(s);
+    const a = s.animate([{transform:'translateY(0) rotate(0)'},{transform:`translateY(${innerHeight+120}px) rotate(${Math.random()*540-270}deg)`}],
+      {duration:1400+Math.random()*900, delay:Math.random()*250, easing:'cubic-bezier(.3,.6,.5,1)'});
+    a.onfinish = () => s.remove();
+  }
+}
+function addStar(k, fromEl){
+  const before = stickersOf(k);
+  S[k].stars++; save();
+  const target = document.querySelector(`[data-count="${k}"]`);
+  const upd = () => document.querySelectorAll(`[data-count="${k}"]`).forEach(e => e.textContent = S[k].stars);
+  if (fromEl && target && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const a = fromEl.getBoundingClientRect(), b = target.getBoundingClientRect();
+    const s = document.createElement('span'); s.className='fly'; s.textContent='⭐';
+    s.style.left = (a.left + a.width/2 - 22) + 'px'; s.style.top = (a.top + a.height/2 - 22) + 'px';
+    document.body.appendChild(s);
+    const dx = b.left + b.width/2 - (a.left + a.width/2), dy = b.top + b.height/2 - (a.top + a.height/2);
+    const an = s.animate([{transform:'translate(0,0) scale(1.4)'},{transform:`translate(${dx}px,${dy}px) scale(.5)`}],{duration:700,easing:'ease-in'});
+    an.onfinish = () => { s.remove(); upd(); };
+  } else upd();
+  if (stickersOf(k) > before) { setTimeout(() => toast('ملصق جديد! ' + STICKERS[stickersOf(k)-1]), 650); return STICKERS[stickersOf(k)-1]; }
+  return null;
+}
+
+/* ---------- home ---------- */
+function goHome(){ show('home'); renderHome(); }
+function renderHome(){
+  const box = $('kids'); box.innerHTML = '';
+  Object.keys(KIDS).forEach(k => {
+    const c = document.createElement('div'); c.className='kid';
+    c.appendChild(ava(k, 128));
+    const n = document.createElement('div'); n.className='name'; n.textContent = KIDS[k].name;
+    const a = document.createElement('div'); a.className='age'; a.textContent = KIDS[k].age;
+    const p = document.createElement('span'); p.className='pill'; p.innerHTML = `⭐ <span data-count="${k}">${S[k].stars}</span> نجمة`;
+    const st = document.createElement('div'); st.className='stickers';
+    const got = stickersOf(k);
+    STICKERS.slice(0, Math.max(got+1, 4)).forEach((e,i) => {
+      const s = document.createElement('span'); s.textContent = e; if (i >= got) s.className='lock'; st.appendChild(s);
+    });
+    const go = document.createElement('button'); go.className='play'; go.style.background = KIDS[k].ring; go.textContent='يلا نلعب!';
+    go.onclick = () => { kid = k; tone([523,784],'triangle',.1); k === 'osama' ? openBaby() : openMenu(); };
+    const pb = document.createElement('div'); pb.className='photo-btns';
+    const add = document.createElement('button'); add.textContent = S[k].photo ? '📷 غيّر الصورة' : '📷 حط صورة';
+    add.onclick = () => { photoKid = k; $('photoInput').value=''; $('photoInput').click(); };
+    pb.appendChild(add);
+    if (S[k].photo){ const rm = document.createElement('button'); rm.textContent='شيل الصورة'; rm.onclick = () => { S[k].photo=null; save(); renderHome(); }; pb.appendChild(rm); }
+    c.append(n, a, p, st, go, pb);
+    box.appendChild(c);
+  });
+}
+let photoKid = 'sanad';
+$('photoInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const N = 320, c = document.createElement('canvas'); c.width = c.height = N;
+      const m = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, N, N);
+      S[photoKid].photo = c.toDataURL('image/jpeg', .85); save(); renderHome();
+      toast('حلوة الصورة! 📸');
+    };
+    img.src = r.result;
+  };
+  r.readAsDataURL(f);
+});
+
+/* ---------- sanad: menu ---------- */
+function openMenu(){
+  show('menu');
+  const box = $('cats'); box.innerHTML = '';
+  CATS.forEach(cat => {
+    const b = document.createElement('button'); b.className='cat'; b.style.background = cat.color;
+    b.innerHTML = `<span class="ic">${cat.icon}</span><span class="nm">${cat.name}</span>`;
+    b.onclick = () => cat.id === 'dhikr' ? openDhikr() : startQuiz(cat.id);
+    box.appendChild(b);
+  });
+  speak('يا ' + KIDS[kid].name + '، شنو تحب تلعب؟');
+}
+
+/* ---------- quiz ---------- */
+let G = null;
+function startQuiz(cat){
+  G = { cat, list: shuffle(Q[cat]).slice(0,5), i:0, earned:0, lock:false, newSticker:null };
+  show('quiz'); nextQ();
+}
+function nextQ(){
+  const q = G.list[G.i]; G.lock = false;
+  $('dots').innerHTML = G.list.map((_,i) => `<i class="${i < G.i ? 'done' : ''}"></i>`).join('');
+  $('qt').textContent = q.t;
+  const box = $('opts'); box.innerHTML = '';
+  const opts = shuffle(q.o);
+  opts.forEach(o => {
+    const b = document.createElement('button'); b.className='opt';
+    b.innerHTML = `<span class="e">${o[0]}</span><span class="l">${o[1]}</span>`;
+    b.onclick = () => answer(b, o);
+    box.appendChild(b);
+  });
+  G.say = q.t + ' ... ' + opts.map(o => o[1]).join('، أو ');
+  setTimeout(() => speak(G.say), 250);
+}
+$('say').onclick = () => G && speak(G.say);
+function answer(b, o){
+  if (G.lock || b.classList.contains('try')) return;
+  if (o[2]){
+    G.lock = true; b.classList.add('right'); chime(); confetti(12);
+    G.earned++; const s = addStar(kid, b); if (s) G.newSticker = s;
+    speak(pick(PRAISE).replace('NAME', KIDS[kid].name));
+    setTimeout(() => { G.i++; G.i < G.list.length ? nextQ() : finish(); }, 1900);
+  } else {
+    b.classList.add('try'); soft();
+    speak('قريب! جرّب مرة ثانية');
+  }
+}
+function finish(){
+  $('dots').innerHTML = G.list.map(() => '<i class="done"></i>').join('');
+  showWin(G.earned, G.newSticker, () => startQuiz(G.cat), openMenu);
+}
+function showWin(n, sticker, again, back){
+  $('winAva').innerHTML = ''; $('winAva').appendChild(ava(kid, 120));
+  $('winTitle').textContent = 'عاشت إيدك يا ' + KIDS[kid].name + '!';
+  $('winStars').textContent = '⭐'.repeat(Math.min(n,5));
+  $('winNew').hidden = !sticker; if (sticker) $('winNew').textContent = 'ربحت ملصق جديد ' + sticker;
+  $('again').onclick = () => { $('win').hidden = true; again(); };
+  $('winBack').onclick = () => { $('win').hidden = true; back(); };
+  $('win').hidden = false; chime(); confetti(26);
+  speak('عاشت إيدك يا ' + KIDS[kid].name + '! جمعت ' + n + ' نجوم');
+}
+
+/* ---------- dhikr ---------- */
+function openDhikr(){
+  show('dhikr');
+  const box = $('dhikrBoard'); box.innerHTML = '';
+  const got = new Set();
+  DHIKR.forEach(([e,t], i) => {
+    const b = document.createElement('button'); b.className='dk';
+    b.innerHTML = `<span class="e">${e}</span><span class="l">${t}</span>`;
+    b.onclick = () => {
+      speak(t); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      if (!got.has(i)){
+        got.add(i); b.classList.add('got'); popS(); addStar(kid, b);
+        if (got.size === DHIKR.length) setTimeout(() => showWin(DHIKR.length, null, openDhikr, openMenu), 1300);
+      }
+    };
+    box.appendChild(b);
+  });
+  speak('اضغط على الذكر واسمعه، وبعدين ردده');
+}
+
+/* ---------- osama: baby board ---------- */
+function openBaby(){
+  show('baby');
+  const box = $('babyBoard'); box.innerHTML = '';
+  BABY.forEach(([e,t,c]) => {
+    const b = document.createElement('button'); b.className='tile'; b.style.background = c;
+    b.innerHTML = `<span class="e">${e}</span><span class="l">${t}</span>`;
+    let last = 0;
+    b.addEventListener('pointerdown', () => {
+      b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      popS(); speak(t);
+      const now = Date.now(); if (now - last > 900){ last = now; addStar(kid, b); }
+      if (Math.random() < .25) confetti(6);
+    });
+    box.appendChild(b);
+  });
+}
+
+goHome();
+})();
+</script>
+
+</body>
+</html>
