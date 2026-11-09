@@ -228,7 +228,8 @@ const BABY = [
   ['🐪','جمل','#C9822B'],['🐑','خروف','#5BA4D6'],['🐝','نحلة','#E8A400'],['🐘','فيل','#7C8DA6'],
   ['🐟','سمكة','#2B9AC9'],['📖','قرآن','#2FA36B'],['🌴','نخلة','#3E8E4E'],['🤲','دعاء','#FF7A59']
 ];
-const PRAISE = ['أحسنت يا NAME!','عاشت إيدك يا NAME!','شاطر يا NAME!','ما شاء الله عليك يا NAME!','برافو يا NAME!'];
+const PRAISE = ['أحسنت يا NAME يا بطل!','عاشت إيدك يا NAME يا بطل!','شاطر يا NAME يا بطل!','ما شاء الله عليك يا NAME يا بطل!','برافو يا NAME يا بطل!','الله يحفظك يا NAME يا بطل!'];
+const praise = () => pick(PRAISE).replace('NAME', KIDS[kid].name);
 
 /* ---------- state ---------- */
 const KEY = 'rihlat-alnoor-v1';
@@ -421,7 +422,7 @@ function answer(b, o){
   if (o[2]){
     G.lock = true; b.classList.add('right'); chime(); confetti(12);
     G.earned++; const s = addStar(kid, b); if (s) G.newSticker = s;
-    speak(pick(PRAISE).replace('NAME', KIDS[kid].name));
+    const pr = praise(); speak(pr); toast(pr);
     setTimeout(() => { G.i++; G.i < G.list.length ? nextQ() : finish(); }, 1900);
   } else {
     b.classList.add('try'); soft();
@@ -434,13 +435,13 @@ function finish(){
 }
 function showWin(n, sticker, again, back){
   $('winAva').innerHTML = ''; $('winAva').appendChild(ava(kid, 120));
-  $('winTitle').textContent = 'عاشت إيدك يا ' + KIDS[kid].name + '!';
+  $('winTitle').textContent = 'أحسنت يا ' + KIDS[kid].name + ' يا بطل! 🏆';
   $('winStars').textContent = '⭐'.repeat(Math.min(n,5));
   $('winNew').hidden = !sticker; if (sticker) $('winNew').textContent = 'ربحت ملصق جديد ' + sticker;
   $('again').onclick = () => { $('win').hidden = true; again(); };
   $('winBack').onclick = () => { $('win').hidden = true; back(); };
   $('win').hidden = false; chime(); confetti(26);
-  speak('عاشت إيدك يا ' + KIDS[kid].name + '! جمعت ' + n + ' نجوم');
+  speak('أحسنت يا ' + KIDS[kid].name + ' يا بطل! فزت وجمعت ' + n + ' نجوم');
 }
 
 /* ---------- dhikr ---------- */
@@ -455,6 +456,7 @@ function openDhikr(){
       speak(t); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       if (!got.has(i)){
         got.add(i); b.classList.add('got'); popS(); addStar(kid, b);
+        if (got.size % 3 === 0 && got.size < DHIKR.length) setTimeout(() => { const pr = praise(); speak(pr); toast(pr); }, 1100);
         if (got.size === DHIKR.length) setTimeout(() => showWin(DHIKR.length, null, openDhikr, openMenu), 1300);
       }
     };
@@ -467,6 +469,7 @@ function openDhikr(){
 function openBaby(){
   show('baby');
   const box = $('babyBoard'); box.innerHTML = '';
+  let taps = 0;
   BABY.forEach(([e,t,c]) => {
     const b = document.createElement('button'); b.className='tile'; b.style.background = c;
     b.innerHTML = `<span class="e">${e}</span><span class="l">${t}</span>`;
@@ -474,6 +477,7 @@ function openBaby(){
     b.addEventListener('pointerdown', () => {
       b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
       popS(); speak(t);
+      if (++taps % 5 === 0) setTimeout(() => { const pr = praise(); speak(pr); toast(pr + ' 🏆'); chime(); confetti(18); }, 900);
       const now = Date.now(); if (now - last > 900){ last = now; addStar(kid, b); }
       if (Math.random() < .25) confetti(6);
     });
