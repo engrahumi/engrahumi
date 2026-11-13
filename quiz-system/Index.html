@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f3f5f9; --card: #ffffff; --ink: #1b2433; --muted: #66718a; --line: #e2e6ef;
+    --pri: #1f5fbf; --pri-ink: #ffffff; --pri-soft: #e8f0fc;
+    --ok: #1e8a4c; --ok-soft: #e6f5ec; --bad: #c63535; --bad-soft: #fcebeb;
+    --warn: #b86e00; --warn-soft: #fff4e0;
+    --radius: 14px; --shadow: 0 1px 2px rgba(20,30,50,.06), 0 4px 14px rgba(20,30,50,.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: 'Tajawal', system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+         font-size: 16px; line-height: 1.6; -webkit-tap-highlight-color: transparent; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+  .wrap.wide { max-width: 1080px; }
+  h1, h2, h3 { margin: 0 0 8px; line-height: 1.3; }
+  h1 { font-size: 24px; font-weight: 800; }
+  h2 { font-size: 19px; font-weight: 700; }
+  h3 { font-size: 16px; font-weight: 700; }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+  .hidden { display: none !important; }
+  label { display: block; font-weight: 600; margin: 12px 0 6px; font-size: 15px; }
+  input[type=text], input[type=password], input[type=number], input[type=datetime-local], select {
+    width: 100%; font: inherit; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--pri); box-shadow: 0 0 0 3px var(--pri-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font: inherit; font-weight: 700; border: 0; border-radius: 10px;
+         padding: 11px 18px; cursor: pointer; background: var(--pri); color: var(--pri-ink); transition: filter .15s, opacity .15s; text-decoration: none; }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.block { width: 100%; padding: 14px; font-size: 17px; }
+  .btn.ghost { background: var(--pri-soft); color: var(--pri); }
+  .btn.danger { background: var(--bad-soft); color: var(--bad); }
+  .btn.sm { padding: 7px 12px; font-size: 14px; border-radius: 8px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .row > * { flex: 1 1 160px; }
+  .alert { border-radius: 10px; padding: 11px 14px; margin: 12px 0; font-weight: 500; }
+  .alert.err { background: var(--bad-soft); color: var(--bad); }
+  .alert.ok { background: var(--ok-soft); color: var(--ok); }
+  .alert.warn { background: var(--warn-soft); color: var(--warn); }
+  .alert.info { background: var(--pri-soft); color: var(--pri); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--pri-soft); color: var(--pri); white-space: nowrap; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .badge.bad { background: var(--bad-soft); color: var(--bad); }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.gray { background: #eef0f4; color: var(--muted); }
+  ul.rules { margin: 8px 0 0; padding-inline-start: 20px; }
+  ul.rules li { margin-bottom: 4px; }
+  .center { text-align: center; }
+  .spinner { width: 22px; height: 22px; border: 3px solid var(--pri-soft); border-top-color: var(--pri); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { padding: 40px 0; text-align: center; color: var(--muted); }
+
+  /* ===== شاشة السؤال ===== */
+  .qhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .qnum { font-weight: 700; color: var(--muted); }
+  .timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 22px; min-width: 70px; text-align: center; padding: 4px 12px; border-radius: 10px; background: var(--pri-soft); color: var(--pri); }
+  .timer.low { background: var(--bad-soft); color: var(--bad); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .65; } }
+  .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-bottom: 16px; }
+  .bar > i { display: block; height: 100%; background: var(--pri); width: 100%; transition: width .25s linear; }
+  .bar.low > i { background: var(--bad); }
+  .qcard { position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  .qtext { font-size: 20px; font-weight: 700; margin-bottom: 18px; white-space: pre-wrap; position: relative; z-index: 1; }
+  .opts { display: grid; gap: 10px; position: relative; z-index: 1; }
+  .opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; font: inherit; font-size: 17px; padding: 14px; border: 2px solid var(--line);
+         border-radius: 12px; background: #fff; color: var(--ink); cursor: pointer; transition: border-color .12s, background .12s; }
+  .opt:hover { border-color: #b9c6dd; }
+  .opt .l { flex: 0 0 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #eef1f6; font-weight: 800; }
+  .opt.sel { border-color: var(--pri); background: var(--pri-soft); }
+  .opt.sel .l { background: var(--pri); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .wm { position: absolute; inset: 0; pointer-events: none; z-index: 0; display: flex; flex-wrap: wrap; align-content: space-around; justify-content: space-around;
+        transform: rotate(-20deg) scale(1.4); opacity: .05; font-weight: 800; font-size: 15px; }
+  .done-icon { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px; background: var(--ok-soft); color: var(--ok); font-size: 38px; }
+  .score { font-size: 44px; font-weight: 800; color: var(--pri); margin: 6px 0; }
+
+  /* ===== لوحة الأستاذ ===== */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 16px; padding-bottom: 2px; }
+  .tab { font: inherit; font-weight: 700; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab.on { background: var(--pri); border-color: var(--pri); color: #fff; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 10px 0; }
+  .stat { background: var(--bg); border-radius: 12px; padding: 12px; }
+  .stat b { display: block; font-size: 26px; font-weight: 800; }
+  .stat span { color: var(--muted); font-size: 14px; }
+  .tbl-wrap { overflow-x: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: start; vertical-align: top; }
+  th { background: #f7f8fb; font-weight: 700; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  .quiz { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-top: 12px; }
+  .quiz .top { display: flex; justify-content: space-between; align-items: start; gap: 10px; flex-wrap: wrap; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: 14px; margin: 6px 0 10px; }
+  .linkbox { display: flex; gap: 8px; }
+  .linkbox input { direction: ltr; font-size: 13px; padding: 8px 10px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .file { border: 2px dashed #c7d2e6; border-radius: 12px; padding: 18px; text-align: center; background: #fafbfe; margin-top: 10px; }
+  .file input { margin-top: 8px; max-width: 100%; }
+  .errs { max-height: 220px; overflow: auto; margin: 0; padding-inline-start: 20px; }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 600; }
+  .check input { width: 18px; height: 18px; }
+  .modal { position: fixed; inset: 0; background: rgba(15,22,35,.5); display: flex; align-items: flex-start; justify-content: center; padding: 30px 12px; overflow: auto; z-index: 50; }
+  .modal .card { max-width: 760px; width: 100%; }
+  .dq { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .dq:last-child { border-bottom: 0; }
+  .dq .o { padding: 3px 8px; border-radius: 6px; margin: 2px 0; }
+  .dq .o.right { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+  .dq .o.wrong { background: var(--bad-soft); color: var(--bad); text-decoration: line-through; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1b2433; color: #fff; padding: 10px 18px; border-radius: 10px; z-index: 60; font-weight: 600; }
+  @media (max-width: 520px) {
+    .card { padding: 16px; }
+    .qtext { font-size: 18px; }
+    h1 { font-size: 21px; }
+  }
+</style>
+</head>
+<body data-mode="<?= mode ?>" data-quiz="<?= quiz ?>">
+<div id="app" class="wrap"><div class="loading"><span class="spinner"></span></div></div>
+
+<script>
+/* ================================================================
+   أدوات عامة
+   ================================================================ */
+var MODE = document.body.getAttribute('data-mode') || 'student';
+var URL_QUIZ = document.body.getAttribute('data-quiz') || '';
+var LET = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
+var $app = document.getElementById('app');
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function $(id) { return document.getElementById(id); }
+function msg(e) {
+  var m = (e && e.message) ? e.message : String(e || '');
+  var i = m.indexOf('§');
+  return i >= 0 ? m.slice(i + 1) : 'صار خطأ بالاتصال، حاول مرة ثانية.';
+}
+function isUserErr(e) { return String((e && e.message) || e || '').indexOf('§') >= 0; }
+
+function call(fn) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return new Promise(function (resolve, reject) {
+    var r = google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+    r[fn].apply(r, args);
+  });
+}
+// إعادة المحاولة تلقائياً عند مشاكل الشبكة أو ضغط السيرفر
+function callRetry(fn) {
+  var args = Array.prototype.slice.call(arguments);
+  var tries = 0;
+  return new Promise(function (resolve, reject) {
+    (function go() {
+      call.apply(null, args).then(resolve, function (e) {
+        tries++;
+        if (isUserErr(e) || tries >= 6) return reject(e);
+        setTimeout(go, Math.min(6000, 600 * Math.pow(1.7, tries)) + Math.random() * 600);
+      });
+    })();
+  });
+}
+function store(k, v) {
+  try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { return null; }
+}
+function fmtDate(ms) {
+  if (!ms) return '—';
+  var d = new Date(ms);
+  return d.toLocaleDateString('ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' +
+         d.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+}
+function toast(t) {
+  var el = document.createElement('div');
+  el.className = 'toast'; el.textContent = t;
+  document.body.appendChild(el);
+  setTimeout(function () { el.remove(); }, 2200);
+}
+function alertBox(id, type, text) {
+  var el = $(id); if (!el) return;
+  if (!text) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="alert ' + type + '">' + text + '</div>';
+}
+function busy(btn, on, label) {
+  if (!btn) return;
+  if (on) { btn.dataset.l = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner" style="width:18px;height:18px;border-width:2px"></span> ' + (label || ''); }
+  else { btn.disabled = false; if (btn.dataset.l) btn.innerHTML = btn.dataset.l; }
+}
+
+/* ================================================================
+   واجهة الطالب
+   ================================================================ */
+var S = { info: null, token: null, name: '', state: null, sel: null, endAt: 0, timer: null, sending: false, blurAt: 0, sid: '' };
+
+function studentInit() {
+  var code = URL_QUIZ || store('quiz_code') || '';
+  if (!code) return renderCodeEntry();
+  loadQuiz(code);
+}
+
+function renderCodeEntry(err) {
+  $app.innerHTML =
+    '<div class="card"><h1>الكوز الإلكتروني</h1><p class="muted">اكتب رمز الكوز اللي أعطاك ياه الأستاذ.</p>' +
+    '<label for="code">رمز الكوز</label><input id="code" type="text" autocomplete="off" style="text-transform:uppercase;direction:ltr;text-align:center;font-size:20px;letter-spacing:3px" maxlength="10">' +
+    '<div id="err"></div><button class="btn block" id="go" style="margin-top:14px">متابعة</button></div>';
+  if (err) alertBox('err', 'err', esc(err));
+  $('go').onclick = function () { var c = $('code').value.trim(); if (c) loadQuiz(c); };
+  $('code').onkeydown = function (e) { if (e.key === 'Enter') $('go').click(); };
+}
+
+function loadQuiz(code) {
+  $app.innerHTML = '<div class="loading"><span class="spinner"></span><p>جاري التحميل...</p></div>';
+  callRetry('studentGetQuizInfo', code).then(function (info) {
+    S.info = info;
+    store('quiz_code', info.code);
+    var tok = store('tok_' + info.code);
+    if (tok) {
+      S.token = tok; S.name = store('name_' + info.code) || ''; S.sid = store('sid_' + info.code) || '';
+      return callRetry('studentState', tok).then(showState, function () { store('tok_' + info.code, null); renderJoin(); });
+    }
+    renderJoin();
+  }, function (e) {
+    store('quiz_code', null);
+    if (URL_QUIZ) { $app.innerHTML = '<div class="card"><div class="alert err">' + esc(msg(e)) + '</div></div>'; }
+    else renderCodeEntry(msg(e));
+  });
+}
+
+function renderJoin() {
+  var i = S.info;
+  var timeTxt = i.defTime + ' ثانية';
+  $app.innerHTML =
+    '<div class="card"><span class="badge">كوز</span><h1 style="margin-top:8px">' + esc(i.name) + '</h1>' +
+    '<div class="stats"><div class="stat"><b>' + i.count + '</b><span>عدد الأسئلة</span></div>' +
+    '<div class="stat"><b>' + timeTxt + '</b><span>تقريباً لكل سؤال</span></div></div>' +
+    (i.closes ? '<p class="small muted">يغلق الكوز: ' + esc(fmtDate(i.closes)) + '</p>' : '') +
+    (i.problem ? '<div class="alert warn">' + esc(i.problem) + '</div>' : '') +
+    '</div>' +
+    '<div class="card"><h2>تعليمات مهمة</h2><ul class="rules">' +
+    '<li>كل سؤال إله وقت محدد، ولما يخلص الوقت ينتقل تلقائياً للسؤال الجاي.</li>' +
+    '<li><b>ما تكدر ترجع</b> للسؤال اللي فات بعد ما تنتقل منه.</li>' +
+    '<li>أسئلتك تختلف عن أسئلة زملائك.</li>' +
+    '<li>الخروج من صفحة الكوز أو فتح تطبيق ثاني <b>يتسجل ويظهر للأستاذ</b>.</li>' +
+    '<li>إذا انقطع الإنترنت، افتح الرابط مرة ثانية وادخل بنفس الرقم حتى تكمل.</li>' +
+    '<li>عندك محاولة وحدة بس.</li></ul></div>' +
+    '<div class="card"><h2>بياناتك</h2>' +
+    '<label for="sid">رقم الطالب</label><input id="sid" type="text" autocomplete="off" inputmode="numeric" value="' + esc(S.sid) + '">' +
+    (i.needsCode
+      ? '<label for="acc">رمز الدخول</label><input id="acc" type="text" autocomplete="off" inputmode="numeric" style="direction:ltr;text-align:center;letter-spacing:3px">'
+      : '<label for="nm">الاسم الكامل</label><input id="nm" type="text" autocomplete="name">') +
+    '<div id="err"></div><button class="btn block" id="start" style="margin-top:16px"' + (i.problem ? ' disabled' : '') + '>ابدأ الكوز</button></div>';
+  $('start').onclick = startQuiz;
+}
+
+function startQuiz() {
+  var btn = $('start');
+  var sid = $('sid').value.trim();
+  var name = $('nm') ? $('nm').value.trim() : '';
+  var acc = $('acc') ? $('acc').value.trim() : '';
+  if (!sid) return alertBox('err', 'err', 'اكتب رقم الطالب.');
+  if ($('nm') && name.length < 3) return alertBox('err', 'err', 'اكتب اسمك الكامل.');
+  if ($('acc') && !acc) return alertBox('err', 'err', 'اكتب رمز الدخول.');
+  alertBox('err');
+  busy(btn, true, 'جاري البدء...');
+  callRetry('studentStart', S.info.code, sid, name, acc).then(function (r) {
+    S.token = r.token; S.name = r.name; S.sid = sid;
+    store('tok_' + S.info.code, r.token); store('name_' + S.info.code, r.name); store('sid_' + S.info.code, sid);
+    showState(r.state);
+  }, function (e) { busy(btn, false); alertBox('err', 'err', esc(msg(e))); });
+}
+
+function showState(st) {
+  S.state = st; S.sending = false;
+  clearInterval(S.timer);
+  if (st.status === 'done') return renderDone(st);
+  S.sel = null;
+  S.endAt = Date.now() + st.question.remainingMs;
+  renderQuestion(st);
+  tick();
+  S.timer = setInterval(tick, 200);
+}
+
+function renderQuestion(st) {
+  var q = st.question;
+  var wmTxt = esc(S.name + ' ' + S.sid);
+  var wm = '';
+  for (var k = 0; k < 18; k++) wm += '<span>' + wmTxt + '</span>';
+  var opts = q.options.map(function (o, i) {
+    return '<button class="opt" data-i="' + i + '"><span class="l">' + LET[i] + '</span><span>' + esc(o) + '</span></button>';
+  }).join('');
+  $app.innerHTML =
+    '<div class="qhead"><span class="qnum">السؤال ' + (st.index + 1) + ' من ' + st.total + '</span><span class="timer" id="tm">--</span></div>' +
+    '<div class="bar" id="bar"><i id="barI"></i></div>' +
+    '<div id="blurWarn">' + (st.blur ? blurHtml(st.blur) : '') + '</div>' +
+    '<div class="card qcard"><div class="wm">' + wm + '</div>' +
+    '<div class="qtext">' + esc(q.text) + '</div><div class="opts">' + opts + '</div></div>' +
+    '<button class="btn block" id="next" disabled>' + (st.index + 1 === st.total ? 'تأكيد وإنهاء الكوز' : 'تأكيد والانتقال للسؤال التالي') + '</button>' +
+    '<p class="small muted center" style="margin-top:10px">ما تكدر ترجع للسؤال بعد التأكيد.</p>';
+  Array.prototype.forEach.call(document.querySelectorAll('.opt'), function (b) {
+    b.onclick = function () {
+      if (S.sending) return;
+      S.sel = Number(b.getAttribute('data-i'));
+      Array.prototype.forEach.call(document.querySelectorAll('.opt'), function (x) { x.classList.toggle('sel', x === b); });
+      $('next').disabled = false;
+    };
+  });
+  $('next').onclick = function () { submitAnswer(false); };
+}
+
+function blurHtml(n) {
+  return '<div class="alert warn">تم تسجيل خروجك من صفحة الكوز (' + n + ' مرة). هذا يظهر للأستاذ.</div>';
+}
+
+function tick() {
+  if (!S.state || S.state.status !== 'question') return;
+  var left = Math.max(0, S.endAt - Date.now());
+  var total = S.state.question.time * 1000;
+  var sec = Math.ceil(left / 1000);
+  var tm = $('tm'), bar = $('bar'), barI = $('barI');
+  if (!tm) return;
+  tm.textContent = Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2);
+  var low = left <= Math.min(10000, total * 0.25);
+  tm.classList.toggle('low', low); bar.classList.toggle('low', low);
+  barI.style.width = Math.max(0, Math.min(100, left / total * 100)) + '%';
+  if (left <= 0 && !S.sending) {
+    clearInterval(S.timer);
+    submitAnswer(true);
+  }
+}
+
+function submitAnswer(timeout) {
+  if (S.sending) return;
+  S.sending = true;
+  clearInterval(S.timer);
+  var btn = $('next');
+  Array.prototype.forEach.call(document.querySelectorAll('.opt'), function (x) { x.disabled = true; });
+  busy(btn, true, timeout ? 'انتهى الوقت...' : 'جاري الإرسال...');
+  var idx = S.state.index, ch = S.sel;
+  // تأخير عشوائي بسيط حتى ما يوصل كل الطلاب للسيرفر بنفس اللحظة
+  setTimeout(function () {
+    callRetry('studentAnswer', S.token, idx, ch).then(showState, function (e) {
+      S.sending = false;
+      $app.innerHTML = '<div class="card center"><div class="alert err">' + esc(msg(e)) + '</div>' +
+        '<button class="btn" onclick="location.reload()">إعادة المحاولة</button></div>';
+    });
+  }, timeout ? Math.random() * 1200 : 0);
+}
+
+function renderDone(st) {
+  store('tok_' + S.info.code, null);
+  var score = (st.score !== undefined && st.score !== null)
+    ? '<p class="muted">درجتك</p><div class="score">' + st.score + ' / ' + st.total + '</div>'
+    : '<p class="muted">النتائج تظهر عند الأستاذ.</p>';
+  $app.innerHTML = '<div class="card center"><div class="done-icon">✓</div><h1>تم استلام إجاباتك</h1>' +
+    '<p>' + esc(S.name) + '</p>' + score + '<p class="small muted" style="margin-top:12px">تكدر تسد هذي الصفحة.</p></div>';
+}
+
+function reportBlur() {
+  if (MODE !== 'student' || !S.state || S.state.status !== 'question' || !S.token) return;
+  var now = Date.now();
+  if (now - S.blurAt < 1500) return;
+  S.blurAt = now;
+  call('studentBlur', S.token).then(function (n) {
+    S.state.blur = n;
+    var w = $('blurWarn'); if (w && n) w.innerHTML = blurHtml(n);
+  }, function () {});
+}
+
+/* ================================================================
+   لوحة الأستاذ
+   ================================================================ */
+var A = { pw: '', data: null, tab: 'quizzes', parsedQ: null, parsedS: null, students: null, results: null, resultsCode: '' };
+
+function adminInit() {
+  var pw = store('admin_pw');
+  call('adminStatus').then(function (st) {
+    if (!st.hasPassword) return renderSetPassword();
+    if (pw) {
+      A.pw = pw;
+      return call('adminGetDashboard', pw).then(function (d) { A.data = d; renderAdmin(); }, function () { store('admin_pw', null); renderLogin(); });
+    }
+    renderLogin();
+  }, function (e) { $app.innerHTML = '<div class="card"><div class="alert err">' + esc(msg(e)) + '</div></div>'; });
+}
+
+function renderSetPassword() {
+  $app.innerHTML = '<div class="card" style="max-width:440px;margin:30px auto"><h1>أهلاً بيك</h1>' +
+    '<p class="muted">هذي أول مرة تفتح لوحة الأستاذ. أنشئ كلمة مرور حتى محد غيرك يدخل.</p>' +
+    '<label for="p1">كلمة المرور</label><input id="p1" type="password">' +
+    '<label for="p2">أعد كتابة كلمة المرور</label><input id="p2" type="password">' +
+    '<div id="err"></div><button class="btn block" id="go" style="margin-top:14px">إنشاء والدخول</button></div>';
+  $('go').onclick = function () {
+    var a = $('p1').value, b = $('p2').value;
+    if (a.length < 4) return alertBox('err', 'err', 'كلمة المرور لازم تكون 4 أحرف على الأقل.');
+    if (a !== b) return alertBox('err', 'err', 'كلمتا المرور غير متطابقتين.');
+    busy($('go'), true);
+    call('adminSetPassword', a).then(function (d) { A.pw = a; store('admin_pw', a); A.data = d; renderAdmin(); },
+      function (e) { busy($('go'), false); alertBox('err', 'err', esc(msg(e))); });
+  };
+}
+
+function renderLogin() {
+  $app.innerHTML = '<div class="card" style="max-width:440px;margin:30px auto"><h1>لوحة الأستاذ</h1>' +
+    '<label for="pw">كلمة المرور</label><input id="pw" type="password">' +
+    '<div id="err"></div><button class="btn block" id="go" style="margin-top:14px">دخول</button></div>';
+  $('pw').onkeydown = function (e) { if (e.key === 'Enter') $('go').click(); };
+  $('go').onclick = function () {
+    var pw = $('pw').value;
+    busy($('go'), true);
+    call('adminGetDashboard', pw).then(function (d) { A.pw = pw; store('admin_pw', pw); A.data = d; renderAdmin(); },
+      function (e) { busy($('go'), false); alertBox('err', 'err', esc(msg(e))); });
+  };
+}
+
+function refresh() {
+  return call('adminGetDashboard', A.pw).then(function (d) { A.data = d; renderAdmin(); });
+}
+
+function renderAdmin() {
+  $app.className = 'wrap wide';
+  var tabs = [['quizzes', 'الكوزات'], ['bank', 'بنك الأسئلة'], ['students', 'الطلاب'], ['results', 'النتائج']];
+  $app.innerHTML =
+    '<div class="topbar"><h1>لوحة الأستاذ</h1><button class="btn ghost sm" id="logout">تسجيل خروج</button></div>' +
+    '<div class="tabs">' + tabs.map(function (t) { return '<button class="tab' + (A.tab === t[0] ? ' on' : '') + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
+    '<div id="tabBody"></div>';
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (b) {
+    b.onclick = function () { A.tab = b.getAttribute('data-t'); renderAdmin(); };
+  });
+  $('logout').onclick = function () { store('admin_pw', null); location.reload(); };
+  ({ quizzes: tabQuizzes, bank: tabBank, students: tabStudents, results: tabResults })[A.tab]();
+}
+
+function quizStatus(q, now) {
+  if (!q.active) return ['موقوف', 'gray'];
+  if (q.opens && now < q.opens) return ['لم يبدأ', 'warn'];
+  if (q.closes && now >= q.closes) return ['انتهى', 'gray'];
+  return ['مفتوح', 'ok'];
+}
+
+function quizLink(code) {
+  return A.data.url ? A.data.url + '?quiz=' + code : '';
+}
+
+/* ---------- تبويب الكوزات ---------- */
+function tabQuizzes() {
+  var d = A.data, b = d.bank;
+  var topics = Object.keys(b.topics).filter(Boolean);
+  var noBank = b.total === 0;
+  var html = '';
+  if (!d.url) html += '<div class="alert warn">رابط الموقع غير متوفر. تأكد إنك نشرت المشروع (Deploy) كتطبيق ويب.</div>';
+  html += '<div class="card"><h2>إنشاء كوز جديد</h2>';
+  if (noBank) {
+    html += '<div class="alert info">بنك الأسئلة فارغ. روح لتبويب <b>بنك الأسئلة</b> وارفع ملف الإكسل أولاً.</div></div>';
+  } else {
+    html +=
+      '<label for="qn">اسم الكوز</label><input id="qn" type="text" placeholder="مثلاً: كوز الفصل الأول">' +
+      '<label for="qt">الموضوع</label><select id="qt"><option value="">كل المواضيع</option>' +
+      topics.map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('') + '</select>' +
+      '<div class="row"><div><label for="qe">عدد الأسئلة السهلة</label><input id="qe" type="number" min="0" value="0"><div class="hint" id="he"></div></div>' +
+      '<div><label for="qm">عدد الأسئلة المتوسطة</label><input id="qm" type="number" min="0" value="0"><div class="hint" id="hm"></div></div>' +
+      '<div><label for="qh">عدد الأسئلة الصعبة</label><input id="qh" type="number" min="0" value="0"><div class="hint" id="hh"></div></div></div>' +
+      '<div class="row"><div><label for="qd">وقت السؤال (ثانية)</label><input id="qd" type="number" min="5" max="600" value="30">' +
+      '<div class="hint">يُستخدم للأسئلة اللي ماعندها وقت بملف الإكسل</div></div>' +
+      '<div><label for="qo">يفتح (اختياري)</label><input id="qo" type="datetime-local"></div>' +
+      '<div><label for="qc">يغلق (اختياري)</label><input id="qc" type="datetime-local"></div></div>' +
+      '<label class="check"><input id="qs" type="checkbox"> إظهار الدرجة للطالب بعد ما يخلص</label>' +
+      '<div class="hint">نصيحة: خليها مطفية حتى ما يدزون الدرجات لبعض أثناء الكوز.</div>' +
+      '<div id="qerr"></div><button class="btn" id="qcreate" style="margin-top:14px">إنشاء الكوز</button></div>';
+  }
+  html += '<div class="card"><h2>الكوزات (' + d.quizzes.length + ')</h2>';
+  if (!d.quizzes.length) html += '<p class="muted">ماكو كوزات بعد.</p>';
+  d.quizzes.forEach(function (q) {
+    var st = quizStatus(q, d.now);
+    var link = quizLink(q.code);
+    var count = q.easy + q.med + q.hard;
+    html += '<div class="quiz"><div class="top"><div><h3>' + esc(q.name) + '</h3></div><span class="badge ' + st[1] + '">' + st[0] + '</span></div>' +
+      '<div class="meta"><span>الرمز: <b style="direction:ltr;display:inline-block">' + q.code + '</b></span><span>' + count + ' سؤال (' + q.easy + ' سهل، ' + q.med + ' متوسط، ' + q.hard + ' صعب)</span>' +
+      '<span>' + q.defTime + ' ثانية للسؤال</span>' + (q.topic ? '<span>الموضوع: ' + esc(q.topic) + '</span>' : '') +
+      '<span>يفتح: ' + fmtDate(q.opens) + '</span><span>يغلق: ' + fmtDate(q.closes) + '</span>' +
+      '<span>دخل ' + q.attempts + ' طالب، أنهى ' + q.finished + '</span></div>' +
+      (link ? '<div class="linkbox"><input type="text" readonly value="' + esc(link) + '" id="lk_' + q.code + '"><button class="btn sm" data-copy="' + q.code + '">نسخ الرابط</button></div>' : '') +
+      '<div class="actions"><button class="btn ghost sm" data-res="' + q.code + '">النتائج</button>' +
+      '<button class="btn ghost sm" data-act="' + q.code + '" data-v="' + (q.active ? '0' : '1') + '">' + (q.active ? 'إيقاف الكوز' : 'تفعيل الكوز') + '</button>' +
+      '<button class="btn danger sm" data-del="' + q.code + '">حذف</button></div></div>';
+  });
+  html += '</div>';
+  $('tabBody').innerHTML = html;
+
+  if (!noBank) {
+    var upd = function () {
+      var t = $('qt').value;
+      var av = t ? b.topics[t] : b.byDiff;
+      $('he').textContent = 'متوفر: ' + av['سهل']; $('hm').textContent = 'متوفر: ' + av['متوسط']; $('hh').textContent = 'متوفر: ' + av['صعب'];
+    };
+    $('qt').onchange = upd; upd();
+    $('qcreate').onclick = function () {
+      var btn = this;
+      var o = $('qo').value, c = $('qc').value;
+      var q = { name: $('qn').value, topic: $('qt').value, easy: $('qe').value, med: $('qm').value, hard: $('qh').value,
+        defTime: $('qd').value, opens: o ? new Date(o).getTime() : null, closes: c ? new Date(c).getTime() : null, showScore: $('qs').checked };
+      busy(btn, true);
+      call('adminCreateQuiz', A.pw, q).then(function (d) { A.data = d; renderAdmin(); toast('تم إنشاء الكوز'); },
+        function (e) { busy(btn, false); alertBox('qerr', 'err', esc(msg(e))); });
+    };
+  }
+  bindAll('[data-copy]', function (el) {
+    var inp = $('lk_' + el.getAttribute('data-copy'));
+    inp.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    if (navigator.clipboard) navigator.clipboard.writeText(inp.value).then(function () { toast('تم نسخ الرابط'); }, function () { if (!ok) toast('انسخ الرابط يدوياً'); });
+    else toast(ok ? 'تم نسخ الرابط' : 'انسخ الرابط يدوياً');
+  });
+  bindAll('[data-res]', function (el) { A.tab = 'results'; A.resultsCode = el.getAttribute('data-res'); A.results = null; renderAdmin(); });
+  bindAll('[data-act]', function (el) {
+    busy(el, true);
+    call('adminSetQuizActive', A.pw, el.getAttribute('data-act'), el.getAttribute('data-v') === '1').then(function (d) { A.data = d; renderAdmin(); },
+      function (e) { busy(el, false); toast(msg(e)); });
+  });
+  bindAll('[data-del]', function (el) {
+    if (!confirm('متأكد تريد تحذف هذا الكوز؟ نتائج الطلاب تبقى محفوظة بورقة المحاولات.')) return;
+    busy(el, true);
+    call('adminDeleteQuiz', A.pw, el.getAttribute('data-del')).then(function (d) { A.data = d; renderAdmin(); toast('تم الحذف'); },
+      function (e) { busy(el, false); toast(msg(e)); });
+  });
+}
+
+function bindAll(sel, fn) {
+  Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) { el.onclick = function () { fn(el); }; });
+}
+
+/* ---------- قراءة ملفات الإكسل ---------- */
+var xlsxReady = null;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  if (xlsxReady) return xlsxReady;
+  xlsxReady = new Promise(function (resolve, reject) {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = resolve;
+    s.onerror = function () { xlsxReady = null; reject(new Error('تعذر تحميل قارئ الإكسل. تأكد من الإنترنت.')); };
+    document.head.appendChild(s);
+  });
+  return xlsxReady;
+}
+
+function readSheetRows(file, preferName) {
+  return loadXLSX().then(function () {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () {
+        try {
+          var wb = XLSX.read(new Uint8Array(fr.result), { type: 'array' });
+          var name = wb.SheetNames.indexOf(preferName) >= 0 ? preferName : wb.SheetNames[0];
+          resolve(XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: false }));
+        } catch (e) { reject(new Error('الملف غير صالح. تأكد إنه ملف إكسل (.xlsx).')); }
+      };
+      fr.onerror = function () { reject(new Error('تعذرت قراءة الملف.')); };
+      fr.readAsArrayBuffer(file);
+    });
+  });
+}
+
+function norm(s) {
+  return String(s == null ? '' : s).replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function mapQuestionHeaders(h) {
+  var m = { type: -1, text: -1, o: [-1, -1, -1, -1], ans: -1, diff: -1, topic: -1, time: -1 };
+  h.forEach(function (raw, i) {
+    var x = norm(raw);
+    if (!x) return;
+    if (x.indexOf('نوع') >= 0) m.type = i;
+    else if (x.indexOf('خيار') >= 0 || /^(option|choice)/.test(x)) {
+      var k = -1;
+      if (/(^|\s)(ا|a|1)$/.test(x)) k = 0; else if (/(^|\s)(ب|b|2)$/.test(x)) k = 1;
+      else if (/(^|\s)(ج|c|3)$/.test(x)) k = 2; else if (/(^|\s)(د|d|4)$/.test(x)) k = 3;
+      if (k >= 0) m.o[k] = i;
+    }
+    else if (x.indexOf('جواب') >= 0 || x.indexOf('اجابه') >= 0 || x === 'answer') m.ans = i;
+    else if (x.indexOf('صعوبه') >= 0 || x === 'difficulty') m.diff = i;
+    else if (x.indexOf('موضوع') >= 0 || x.indexOf('فصل') >= 0 || x === 'topic') m.topic = i;
+    else if (x.indexOf('وقت') >= 0 || x.indexOf('زمن') >= 0 || x === 'time') m.time = i;
+    else if (x.indexOf('سؤال') >= 0 || x === 'question') m.text = i;
+  });
+  return m;
+}
+
+function parseQuestions(rows) {
+  var errors = [], warns = [], items = [];
+  if (!rows.length) return { errors: ['الملف فارغ.'], warns: warns, items: items };
+  var m = mapQuestionHeaders(rows[0]);
+  if (m.text < 0) errors.push('ما لكيت عمود "السؤال" بالسطر الأول. استخدم القالب الجاهز.');
+  if (m.ans < 0) errors.push('ما لكيت عمود "الجواب الصحيح" بالسطر الأول.');
+  if (m.o[0] < 0 || m.o[1] < 0) errors.push('ما لكيت أعمدة الخيارات (الخيار أ، الخيار ب ...).');
+  if (errors.length) return { errors: errors, warns: warns, items: items };
+  var cell = function (r, i) { return i < 0 ? '' : String(r[i] == null ? '' : r[i]).trim(); };
+  for (var n = 1; n < rows.length; n++) {
+    var r = rows[n], line = n + 1;
+    if (!r.some(function (v) { return String(v).trim(); })) continue;
+    var text = cell(r, m.text);
+    var tRaw = norm(cell(r, m.type));
+    var isTF = tRaw.indexOf('صح') >= 0 || tRaw.indexOf('خطا') >= 0 || tRaw === 'tf';
+    var opts = m.o.map(function (i) { return cell(r, i); });
+    if (isTF && !opts[0] && !opts[1]) { opts[0] = 'صح'; opts[1] = 'خطأ'; }
+    if (!text) { errors.push('السطر ' + line + ': نص السؤال فارغ.'); continue; }
+    var a = norm(cell(r, m.ans)), ans = -1;
+    var amap = { 'ا': 0, 'a': 0, '1': 0, 'ب': 1, 'b': 1, '2': 1, 'ج': 2, 'c': 2, '3': 2, 'د': 3, 'd': 3, '4': 3 };
+    if (amap.hasOwnProperty(a)) ans = amap[a];
+    else if (a) opts.forEach(function (o, i) { if (ans < 0 && o && norm(o) === a) ans = i; });
+    if (!a) { errors.push('السطر ' + line + ': الجواب الصحيح فارغ.'); continue; }
+    if (ans < 0) { errors.push('السطر ' + line + ': الجواب الصحيح "' + esc(cell(r, m.ans)) + '" غير مفهوم. اكتب أ أو ب أو ج أو د.'); continue; }
+    if (!opts[ans]) { errors.push('السطر ' + line + ': الجواب الصحيح هو الخيار ' + LET[ans] + ' بس هذا الخيار فارغ.'); continue; }
+    // نرتب الخيارات بدون فراغات
+    var compact = [], newAns = -1;
+    opts.forEach(function (o, i) { if (o) { if (i === ans) newAns = compact.length; compact.push(o); } });
+    if (compact.length < 2) { errors.push('السطر ' + line + ': لازم خيارين على الأقل.'); continue; }
+    var dRaw = norm(cell(r, m.diff)), diff;
+    if (!dRaw) { diff = 'متوسط'; warns.push('السطر ' + line + ': الصعوبة فارغة، اعتبرناها متوسط.'); }
+    else if (dRaw.indexOf('سهل') >= 0 || dRaw === 'easy') diff = 'سهل';
+    else if (dRaw.indexOf('متوسط') >= 0 || dRaw === 'medium') diff = 'متوسط';
+    else if (dRaw.indexOf('صعب') >= 0 || dRaw === 'hard') diff = 'صعب';
+    else { errors.push('السطر ' + line + ': الصعوبة "' + esc(cell(r, m.diff)) + '" غير مفهومة. اكتب سهل أو متوسط أو صعب.'); continue; }
+    var tm = cell(r, m.time), time = '';
+    if (tm) {
+      time = Number(tm.replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }));
+      if (!(time >= 5 && time <= 600)) { errors.push('السطر ' + line + ': الوقت لازم يكون رقم بين 5 و 600 ثانية.'); continue; }
+    }
+    items.push({ type: isTF ? 'صح وخطأ' : 'اختيار', text: text, opts: compact, ans: newAns, diff: diff, topic: cell(r, m.topic), time: time });
+  }
+  if (!items.length && !errors.length) errors.push('ما لكيت أي سؤال بالملف.');
+  return { errors: errors, warns: warns, items: items };
+}
+
+function downloadTemplate() {
+  loadXLSX().then(function () {
+    var rows = [
+      ['نوع السؤال', 'السؤال', 'الخيار أ', 'الخيار ب', 'الخيار ج', 'الخيار د', 'الجواب الصحيح', 'الصعوبة', 'الموضوع', 'الوقت (ثانية)'],
+      ['اختيار', 'ما ناتج 7 × 8 ؟', '54', '56', '64', '48', 'ب', 'سهل', 'الضرب', 30],
+      ['صح وخطأ', 'الماء يغلي عند 100 درجة مئوية عند مستوى سطح البحر', 'صح', 'خطأ', '', '', 'أ', 'متوسط', 'فيزياء', 20]
+    ];
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [14, 50, 18, 18, 18, 18, 14, 12, 18, 13].map(function (w) { return { wch: w }; });
+    var wb = XLSX.utils.book_new();
+    wb.Workbook = { Views: [{ RTL: true }] };
+    XLSX.utils.book_append_sheet(wb, ws, 'الأسئلة');
+    XLSX.writeFile(wb, 'قالب-اسئلة-الكوز.xlsx');
+  }, function (e) { toast(e.message); });
+}
+
+/* ---------- تبويب بنك الأسئلة ---------- */
+function tabBank() {
+  var b = A.data.bank;
+  var topics = Object.keys(b.topics);
+  var html = '<div class="card"><h2>بنك الأسئلة</h2>' +
+    '<div class="stats"><div class="stat"><b>' + b.total + '</b><span>كل الأسئلة</span></div>' +
+    '<div class="stat"><b>' + b.byDiff['سهل'] + '</b><span>سهل</span></div>' +
+    '<div class="stat"><b>' + b.byDiff['متوسط'] + '</b><span>متوسط</span></div>' +
+    '<div class="stat"><b>' + b.byDiff['صعب'] + '</b><span>صعب</span></div></div>';
+  if (topics.length) {
+    html += '<div class="tbl-wrap"><table><thead><tr><th>الموضوع</th><th>سهل</th><th>متوسط</th><th>صعب</th></tr></thead><tbody>' +
+      topics.map(function (t) { var x = b.topics[t]; return '<tr><td>' + (t ? esc(t) : '<span class="muted">بدون موضوع</span>') + '</td><td>' + x['سهل'] + '</td><td>' + x['متوسط'] + '</td><td>' + x['صعب'] + '</td></tr>'; }).join('') +
+      '</tbody></table></div>';
+  }
+  html += '<p class="small muted" style="margin-top:12px">تكدر تعدل أو تحذف أسئلة مباشرة من ورقة "الأسئلة" بملف Google Sheets.</p></div>' +
+    '<div class="card"><h2>رفع أسئلة من ملف إكسل</h2>' +
+    '<p class="muted small">كل سطر سؤال. الأعمدة: نوع السؤال، السؤال، الخيار أ، ب، ج، د، الجواب الصحيح، الصعوبة، الموضوع، الوقت.</p>' +
+    '<button class="btn ghost sm" id="tpl">تحميل قالب الإكسل</button>' +
+    '<div class="file"><div>اختر ملف الإكسل (.xlsx)</div><input type="file" id="qfile" accept=".xlsx,.xls,.csv"></div>' +
+    '<div id="qres"></div></div>';
+  $('tabBody').innerHTML = html;
+  $('tpl').onclick = downloadTemplate;
+  $('qfile').onchange = function () {
+    var f = this.files[0]; if (!f) return;
+    $('qres').innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+    readSheetRows(f, 'الأسئلة').then(function (rows) {
+      var p = parseQuestions(rows);
+      A.parsedQ = p;
+      renderParsedQuestions(p);
+    }, function (e) { alertBox('qres', 'err', esc(e.message)); });
+  };
+}
+
+function renderParsedQuestions(p) {
+  var html = '';
+  var counts = { 'سهل': 0, 'متوسط': 0, 'صعب': 0 };
+  p.items.forEach(function (q) { counts[q.diff]++; });
+  if (p.errors.length) {
+    html += '<div class="alert err"><b>لازم تصلح هذي الأخطاء بالملف وترفعه مرة ثانية (' + p.errors.length + '):</b><ul class="errs">' +
+      p.errors.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul></div>';
+  }
+  if (p.warns.length) {
+    html += '<div class="alert warn"><b>ملاحظات:</b><ul class="errs">' + p.warns.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul></div>';
+  }
+  if (p.items.length && !p.errors.length) {
+    html += '<div class="alert ok">الملف سليم: ' + p.items.length + ' سؤال (' + counts['سهل'] + ' سهل، ' + counts['متوسط'] + ' متوسط، ' + counts['صعب'] + ' صعب)</div>' +
+      '<h3>معاينة</h3><div class="tbl-wrap"><table><thead><tr><th>#</th><th>السؤال</th><th>الخيارات</th><th>الصعوبة</th><th>الموضوع</th><th>الوقت</th></tr></thead><tbody>' +
+      p.items.slice(0, 8).map(function (q, i) {
+        return '<tr><td>' + (i + 1) + '</td><td>' + esc(q.text) + '</td><td>' + q.opts.map(function (o, k) {
+          return k === q.ans ? '<b style="color:var(--ok)">✓ ' + esc(o) + '</b>' : esc(o);
+        }).join('<br>') + '</td><td>' + q.diff + '</td><td>' + esc(q.topic) + '</td><td>' + (q.time || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      (p.items.length > 8 ? '<p class="small muted">... و' + (p.items.length - 8) + ' سؤال ثاني</p>' : '') +
+      '<div class="actions"><button class="btn" id="qadd">إضافة للبنك</button>' +
+      (A.data.bank.total ? '<button class="btn danger" id="qrep">استبدال البنك بالكامل</button>' : '') + '</div>';
+  }
+  $('qres').innerHTML = html;
+  var send = function (replace, btn) {
+    if (replace && !confirm('راح تنحذف كل الأسئلة الحالية (' + A.data.bank.total + ') وتنحط مكانها الأسئلة الجديدة. متأكد؟')) return;
+    busy(btn, true, 'جاري الرفع...');
+    call('adminUploadQuestions', A.pw, p.items, replace).then(function (d) {
+      A.data = d; A.parsedQ = null; renderAdmin(); toast('تم رفع ' + p.items.length + ' سؤال');
+    }, function (e) { busy(btn, false); toast(msg(e)); });
+  };
+  if ($('qadd')) $('qadd').onclick = function () { send(false, this); };
+  if ($('qrep')) $('qrep').onclick = function () { send(true, this); };
+}
+
+/* ---------- تبويب الطلاب ---------- */
+function tabStudents() {
+  var n = A.data.students;
+  var html = '<div class="card"><h2>الطلاب</h2>' +
+    (n ? '<div class="alert info">عندك قائمة بيها <b>' + n + '</b> طالب. الطالب يدخل برقمه ورمز الدخول الخاص بي، فمحد يكدر يدخل باسم غيره.</div>'
+       : '<div class="alert warn">ماكو قائمة طلاب. أي شخص عنده رابط الكوز يكدر يدخل باسمه ورقمه. <b>ننصحك ترفع قائمة الطلاب</b> حتى كل طالب ياخذ رمز دخول خاص.</div>') +
+    '<p class="muted small">ارفع ملف إكسل بي عمودين: <b>الاسم</b> و <b>الرقم</b>. النظام يولد رمز دخول من 6 أرقام لكل طالب، وانت توزع الرموز على الطلاب.</p>' +
+    '<div class="file"><div>اختر ملف الطلاب (.xlsx)</div><input type="file" id="sfile" accept=".xlsx,.xls,.csv"></div><div id="sres"></div></div>' +
+    '<div class="card" id="slist"><h2>قائمة الطلاب ورموز الدخول</h2><div class="loading"><span class="spinner"></span></div></div>';
+  $('tabBody').innerHTML = html;
+  $('sfile').onchange = function () {
+    var f = this.files[0]; if (!f) return;
+    readSheetRows(f, 'الطلاب').then(function (rows) { renderParsedStudents(parseStudents(rows)); },
+      function (e) { alertBox('sres', 'err', esc(e.message)); });
+  };
+  call('adminGetStudents', A.pw).then(renderStudentList, function (e) { $('slist').innerHTML = '<div class="alert err">' + esc(msg(e)) + '</div>'; });
+}
+
+function parseStudents(rows) {
+  var errors = [], items = [];
+  if (!rows.length) return { errors: ['الملف فارغ.'], items: items };
+  var h = rows[0].map(norm), ni = -1, ii = -1;
+  h.forEach(function (x, i) { if (x.indexOf('اسم') >= 0 || x === 'name') ni = i; else if (x.indexOf('رقم') >= 0 || x === 'id') ii = i; });
+  if (ni < 0 || ii < 0) return { errors: ['لازم يكون بالسطر الأول عمود "الاسم" وعمود "الرقم".'], items: items };
+  var seen = {};
+  for (var n = 1; n < rows.length; n++) {
+    var name = String(rows[n][ni] || '').trim(), id = String(rows[n][ii] || '').trim();
+    if (!name && !id) continue;
+    if (!name || !id) { errors.push('السطر ' + (n + 1) + ': الاسم أو الرقم فارغ.'); continue; }
+    if (seen[id]) { errors.push('السطر ' + (n + 1) + ': الرقم ' + esc(id) + ' مكرر.'); continue; }
+    seen[id] = 1;
+    items.push({ id: id, name: name });
+  }
+  if (!items.length && !errors.length) errors.push('ما لكيت أي طالب بالملف.');
+  return { errors: errors, items: items };
+}
+
+function renderParsedStudents(p) {
+  if (p.errors.length) return alertBox('sres', 'err', '<ul class="errs">' + p.errors.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul>');
+  $('sres').innerHTML = '<div class="alert ok">الملف سليم: ' + p.items.length + ' طالب.</div><div class="actions">' +
+    '<button class="btn" id="sadd">إضافة للقائمة</button>' + (A.data.students ? '<button class="btn danger" id="srep">استبدال القائمة بالكامل</button>' : '') + '</div>' +
+    '<p class="hint">الإضافة تحافظ على رموز الطلاب الموجودين. الاستبدال يولّد رموز جديدة للكل.</p>';
+  var send = function (replace, btn) {
+    if (replace && !confirm('راح تنحذف القائمة الحالية ويتولد رموز جديدة لكل الطلاب. متأكد؟')) return;
+    busy(btn, true);
+    call('adminUploadStudents', A.pw, p.items, replace).then(function (list) {
+      A.data.students = list.length; renderAdmin(); toast('تم حفظ ' + list.length + ' طالب');
+    }, function (e) { busy(btn, false); toast(msg(e)); });
+  };
+  $('sadd').onclick = function () { send(false, this); };
+  if ($('srep')) $('srep').onclick = function () { send(true, this); };
+}
+
+function renderStudentList(list) {
+  A.students = list;
+  var el = $('slist'); if (!el) return;
+  if (!list.length) { el.innerHTML = '<h2>قائمة الطلاب ورموز الدخول</h2><p class="muted">ماكو طلاب.</p>'; return; }
+  el.innerHTML = '<div class="topbar" style="margin:0"><h2>قائمة الطلاب ورموز الدخول (' + list.length + ')</h2>' +
+    '<div class="actions" style="margin:0"><button class="btn ghost sm" id="sdl">تحميل إكسل بالرموز</button><button class="btn danger sm" id="sclr">حذف كل الطلاب</button></div></div>' +
+    '<p class="hint">الرموز موجودة أيضاً بورقة "الطلاب" بملف Google Sheets.</p>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>#</th><th>الاسم</th><th>الرقم</th><th>رمز الدخول</th></tr></thead><tbody>' +
+    list.map(function (s, i) { return '<tr><td>' + (i + 1) + '</td><td>' + esc(s.name) + '</td><td>' + esc(s.id) + '</td><td style="direction:ltr;text-align:right;font-weight:700;letter-spacing:1px">' + esc(s.code) + '</td></tr>'; }).join('') +
+    '</tbody></table></div>';
+  $('sdl').onclick = function () {
+    exportXlsx([['الاسم', 'رقم الطالب', 'رمز الدخول']].concat(list.map(function (s) { return [s.name, s.id, s.code]; })), 'رموز-دخول-الطلاب.xlsx', 'الطلاب');
+  };
+  $('sclr').onclick = function () {
+    if (!confirm('راح تنحذف كل قائمة الطلاب ويصير الدخول مفتوح بالاسم والرقم. متأكد؟')) return;
+    busy(this, true);
+    call('adminUploadStudents', A.pw, [], true).then(function () { A.data.students = 0; renderAdmin(); toast('تم الحذف'); },
+      function (e) { toast(msg(e)); });
+  };
+}
+
+function exportXlsx(aoa, filename, sheet) {
+  loadXLSX().then(function () {
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var wb = XLSX.utils.book_new();
+    wb.Workbook = { Views: [{ RTL: true }] };
+    XLSX.utils.book_append_sheet(wb, ws, sheet);
+    XLSX.writeFile(wb, filename);
+  }, function (e) { toast(e.message); });
+}
+
+/* ---------- تبويب النتائج ---------- */
+function tabResults() {
+  var qs = A.data.quizzes;
+  if (!qs.length) { $('tabBody').innerHTML = '<div class="card"><p class="muted">ماكو كوزات بعد.</p></div>'; return; }
+  if (!A.resultsCode) A.resultsCode = qs[0].code;
+  $('tabBody').innerHTML = '<div class="card"><div class="row" style="align-items:end"><div><label for="rq">الكوز</label><select id="rq">' +
+    qs.map(function (q) { return '<option value="' + q.code + '"' + (q.code === A.resultsCode ? ' selected' : '') + '>' + esc(q.name) + ' (' + q.code + ')</option>'; }).join('') +
+    '</select></div><div style="flex:0 0 auto"><button class="btn ghost" id="rr">تحديث</button></div></div><div id="rbody"><div class="loading"><span class="spinner"></span></div></div></div>';
+  $('rq').onchange = function () { A.resultsCode = this.value; loadResults(); };
+  $('rr').onclick = loadResults;
+  loadResults();
+}
+
+function loadResults() {
+  $('rbody').innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+  call('adminGetResults', A.pw, A.resultsCode).then(renderResults, function (e) { alertBox('rbody', 'err', esc(msg(e))); });
+}
+
+function renderResults(list) {
+  A.results = list;
+  if (!list.length) { $('rbody').innerHTML = '<p class="muted" style="margin-top:14px">محد دخل لهذا الكوز بعد.</p>'; return; }
+  list.sort(function (a, b) { return a.name.localeCompare(b.name, 'ar'); });
+  var fin = list.filter(function (r) { return r.status === 'منتهي'; });
+  var avg = fin.length ? Math.round(fin.reduce(function (s, r) { return s + (r.pct || 0); }, 0) / fin.length) : 0;
+  var flagged = list.filter(function (r) { return r.blur > 0 || (r.avg !== null && r.avg < 4); }).length;
+  var html = '<div class="stats" style="margin-top:14px"><div class="stat"><b>' + list.length + '</b><span>دخلوا</span></div>' +
+    '<div class="stat"><b>' + fin.length + '</b><span>أنهوا</span></div>' +
+    '<div class="stat"><b>' + avg + '%</b><span>متوسط الدرجات</span></div>' +
+    '<div class="stat"><b style="color:' + (flagged ? 'var(--warn)' : 'inherit') + '">' + flagged + '</b><span>يحتاجون انتباه</span></div></div>' +
+    '<div class="actions"><button class="btn ghost sm" id="rx">تحميل النتائج إكسل</button></div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>الدرجة</th><th>النسبة</th><th>غير مجاب</th><th>مغادرة الصفحة</th><th>متوسط وقت الجواب</th><th>الحالة</th><th></th></tr></thead><tbody>' +
+    list.map(function (r) {
+      var fast = r.avg !== null && r.avg < 4;
+      return '<tr><td>' + esc(r.name) + '</td><td>' + esc(r.sid) + '</td>' +
+        '<td><b>' + (r.score === null ? '—' : r.score + ' / ' + r.total) + '</b></td><td>' + (r.pct === null ? '—' : r.pct + '%') + '</td>' +
+        '<td>' + r.unanswered + '</td>' +
+        '<td>' + (r.blur ? '<span class="badge bad">' + r.blur + ' مرة</span>' : '<span class="badge ok">0</span>') + '</td>' +
+        '<td>' + (r.avg === null ? '—' : (fast ? '<span class="badge warn" title="سريع بشكل غير طبيعي">' + r.avg + ' ث</span>' : r.avg + ' ث')) + '</td>' +
+        '<td>' + (r.status === 'منتهي' ? '<span class="badge ok">أنهى</span>' : '<span class="badge warn">جاري</span>') + '</td>' +
+        '<td style="white-space:nowrap"><button class="btn ghost sm" data-det="' + r.id + '">التفاصيل</button> <button class="btn danger sm" data-reset="' + r.id + '" title="حذف المحاولة حتى يكدر الطالب يعيد">إعادة</button></td></tr>';
+    }).join('') + '</tbody></table></div>' +
+    '<p class="hint">"مغادرة الصفحة" = عدد مرات طلوع الطالب من صفحة الكوز. "متوسط وقت الجواب" أقل من 4 ثواني ممكن يعني إنه عنده الأجوبة مسبقاً.</p>';
+  $('rbody').innerHTML = html;
+  $('rx').onclick = function () {
+    exportXlsx([['الاسم', 'رقم الطالب', 'الدرجة', 'من', 'النسبة %', 'غير مجاب', 'مغادرة الصفحة', 'متوسط وقت الجواب (ثانية)', 'الحالة', 'البدء', 'الانتهاء']].concat(
+      list.map(function (r) { return [r.name, r.sid, r.score, r.total, r.pct, r.unanswered, r.blur, r.avg, r.status, fmtDate(r.start), fmtDate(r.end)]; })),
+      'نتائج-' + A.resultsCode + '.xlsx', 'النتائج');
+  };
+  bindAll('[data-det]', function (el) { showDetail(el.getAttribute('data-det'), el); });
+  bindAll('[data-reset]', function (el) {
+    if (!confirm('راح تنحذف محاولة هذا الطالب ويكدر يدخل الكوز من جديد بأسئلة جديدة. متأكد؟')) return;
+    busy(el, true);
+    call('adminResetAttempt', A.pw, el.getAttribute('data-reset')).then(function () { toast('تم'); loadResults(); },
+      function (e) { busy(el, false); toast(msg(e)); });
+  });
+}
+
+function showDetail(id, btn) {
+  busy(btn, true);
+  call('adminGetAttemptDetail', A.pw, id).then(function (d) {
+    busy(btn, false);
+    var html = '<div class="modal" id="modal"><div class="card"><div class="topbar"><h2>' + esc(d.name) + ' (' + esc(d.sid) + ')</h2><button class="btn ghost sm" id="mclose">إغلاق</button></div>' +
+      d.items.map(function (q, i) {
+        var state = !q.reached ? '<span class="badge gray">لم يصل</span>' : q.chosen === null ? '<span class="badge warn">بدون جواب</span>' :
+          q.chosen === q.correct ? '<span class="badge ok">صح</span>' : '<span class="badge bad">خطأ</span>';
+        return '<div class="dq"><div class="topbar" style="margin:0 0 6px"><b>' + (i + 1) + '. ' + esc(q.text) + '</b><span>' + state +
+          (q.seconds !== null ? ' <span class="small muted">' + q.seconds + ' ث</span>' : '') + '</span></div>' +
+          q.options.map(function (o, k) {
+            var c = k === q.correct ? 'right' : (k === q.chosen ? 'wrong' : '');
+            return '<div class="o ' + c + '">' + LET[k] + ') ' + esc(o) + (k === q.chosen ? ' ← جواب الطالب' : '') + '</div>';
+          }).join('') + '</div>';
+      }).join('') + '</div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    var close = function () { var m = $('modal'); if (m) m.remove(); };
+    $('mclose').onclick = close;
+    $('modal').onclick = function (e) { if (e.target.id === 'modal') close(); };
+  }, function (e) { busy(btn, false); toast(msg(e)); });
+}
+
+/* ================================================================
+   التشغيل
+   ================================================================ */
+if (MODE === 'admin') {
+  adminInit();
+} else {
+  document.addEventListener('visibilitychange', function () { if (document.hidden) reportBlur(); });
+  window.addEventListener('blur', reportBlur);
+  ['copy', 'cut', 'contextmenu'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { if (S.state && S.state.status === 'question') e.preventDefault(); });
+  });
+  studentInit();
+}
+</script>
+</body>
+</html>
